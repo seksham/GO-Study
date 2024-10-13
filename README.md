@@ -7,16 +7,18 @@
 3. [Functions and Methods](#3-functions-and-methods)
 4. [Data Structures](#4-data-structures)
 5. [Pointers](#5-pointers)
-6. [Interfaces](#6-interfaces)
-7. [Concurrency](#7-concurrency)
-8. [Error Handling](#8-error-handling)
-9. [Advanced Topics](#9-advanced-topics)
-10. [Memory Management](#10-memory-management)
-11. [Web Development](#11-web-development)
-12. [Database Integration](#12-database-integration)
-13. [Testing](#13-testing)
-14. [Tools and Commands](#14-tools-and-commands)
-15. [Best Practices and Patterns](#15-best-practices-and-patterns)
+6. [Structs](#6-structs)
+7. [Interfaces](#7-interfaces)
+8. [Concurrency](#8-concurrency)
+9. [Error Handling](#9-error-handling)
+10. [Advanced Topics](#10-advanced-topics)
+11. [Memory Management](#11-memory-management)
+12. [Web Development](#12-web-development)
+13. [Database Integration](#13-database-integration)
+14. [Testing](#14-testing)
+15. [Tools and Commands](#15-tools-and-commands)
+16. [Best Practices and Patterns](#16-best-practices-and-patterns)
+17. [File Operations](#17-file-operations)
 
 ## 1. Introduction to Go
 
@@ -240,6 +242,9 @@ func (r *Rectangle) Scale(factor float64) {
 }
 ```
 
+Additional examples:
+- [Method Examples](Methods/main.go)
+
 ### 3.3 The `init` Function
 
 The `init` function is automatically executed before the main function:
@@ -423,30 +428,6 @@ Additional examples:
 
 This example demonstrates various map operations, including declaration, initialization, adding elements, deleting elements, and iteration.
 
-### 4.3 Structs
-
-Structs are user-defined types:
-
-```go
-type Person struct {
-    Name string
-    Age  int
-}
-
-p := Person{Name: "Alice", Age: 30}
-fmt.Println(p.Name)
-
-// Anonymous struct
-point := struct {
-    x, y int
-}{10, 20}
-```
-
-Additional examples:
-- [Struct and Method Examples](Structs/main.go)
-
-This file showcases the definition and use of structs in Go, as well as how to define methods on structs. It includes examples of both value receivers and pointer receivers.
-
 ## 5. Pointers
 
 ### 5.1 Pointer Basics
@@ -479,9 +460,163 @@ modifyPerson(&person)
 fmt.Println(person) // Output: {Alice 30}
 ```
 
-## 6. Interfaces
+Additional examples:
+- [Pointer Examples](Pointer/main.go)
 
-### 6.1 Interface Basics
+## 6. Structs
+
+Structs in Go are composite types that group together variables under a single name.
+
+### 6.1 Basic Struct Definition and Usage
+
+```go
+type Person struct {
+    Name string
+    Age  int
+}
+
+// Creating and initializing a struct
+p1 := Person{"Alice", 30}
+p2 := Person{Name: "Bob", Age: 25}
+p3 := Person{Name: "Charlie"} // Age will be set to zero value (0)
+
+// Accessing struct fields
+fmt.Println(p1.Name, p1.Age)
+```
+
+### 6.2 Struct Methods
+
+Methods can be defined on structs:
+
+```go
+func (p Person) Greet() string {
+    return fmt.Sprintf("Hello, my name is %s and I'm %d years old", p.Name, p.Age)
+}
+
+fmt.Println(p1.Greet())
+```
+
+### 6.3 Pointer Receivers
+
+Methods can use pointer receivers to modify the struct:
+
+```go
+func (p *Person) Birthday() {
+    p.Age++
+}
+
+p1.Birthday()
+fmt.Println(p1.Age) // Increased by 1
+```
+
+### 6.4 Embedding and Composition
+
+Go supports struct embedding for composition:
+
+```go
+type Address struct {
+    Street string
+    City   string
+}
+
+type Employee struct {
+    Person  // Embedding Person
+    Address // Embedding Address
+    Salary  float64
+}
+
+emp := Employee{
+    Person:  Person{Name: "John", Age: 30},
+    Address: Address{Street: "123 Main St", City: "Anytown"},
+    Salary:  50000,
+}
+
+fmt.Println(emp.Name) // Accessing embedded Person field
+fmt.Println(emp.Street) // Accessing embedded Address field
+```
+
+### 6.5 Anonymous Fields
+
+You can embed structs or other types without specifying a field name:
+
+```go
+type Manager struct {
+    Employee
+    Department string
+}
+
+mgr := Manager{
+    Employee: Employee{
+        Person:  Person{Name: "Jane", Age: 35},
+        Address: Address{Street: "456 Elm St", City: "Othertown"},
+        Salary:  75000,
+    },
+    Department: "IT",
+}
+```
+
+### 6.6 Struct Tags
+
+Struct tags provide metadata about struct fields:
+
+```go
+type User struct {
+    Name     string `json:"name" validate:"required"`
+    Email    string `json:"email" validate:"required,email"`
+    Password string `json:"-" validate:"required,min=8"`
+}
+
+// Using reflection to access tags
+t := reflect.TypeOf(User{})
+field, _ := t.FieldByName("Email")
+fmt.Println(field.Tag.Get("json"))    // Output: email
+fmt.Println(field.Tag.Get("validate")) // Output: required,email
+```
+
+### 6.7 Anonymous Structs
+
+You can create one-off structs without defining a new type:
+
+```go
+point := struct {
+    X, Y int
+}{10, 20}
+
+fmt.Println(point.X, point.Y)
+```
+
+### 6.8 Comparing Structs
+
+Structs are comparable if all their fields are comparable:
+
+```go
+type Point struct {
+    X, Y int
+}
+
+p1 := Point{1, 2}
+p2 := Point{1, 2}
+fmt.Println(p1 == p2) // Output: true
+```
+
+### 6.9 Struct Initialization with New
+
+You can use the `new` function to create a pointer to a zeroed struct:
+
+```go
+p := new(Person)
+p.Name = "David"
+p.Age = 40
+```
+
+Additional examples:
+- [Struct Examples](Structs/main.go)
+
+This file demonstrates various aspects of struct usage in Go, including definition, methods, embedding, and more complex struct compositions.
+
+## 7. Interfaces
+
+### 7.1 Interface Basics
 
 Interfaces define a set of method signatures:
 
@@ -507,8 +642,8 @@ writeData(cw, []byte("Hello, World!"))
 
 Additional examples:
 - [Interface Examples](Interfaces/main.go)
-
-### 6.2 Stringer Interface
+- [Shape Interface](shapeInterface/main.go)
+### 7.2 Stringer Interface
 
 The Stringer interface is used for custom string representations:
 
@@ -530,7 +665,9 @@ p := Person{Name: "Alice", Age: 30}
 fmt.Println(p) // Output: Alice (30 years old)
 ```
 
-### 6.3 Sort.Interface
+- [Stringer Interface](stringerinterface/main.go)
+
+### 7.3 Sort.Interface
 
 The sort.Interface is used for custom sorting:
 
@@ -557,9 +694,12 @@ sort.Sort(ByAge(people))
 fmt.Println(people)
 ```
 
-## 7. Concurrency
+Additional examples:
+- [Sort Interface](sortinterface/main.go)
 
-### 7.1 Goroutines
+## 8. Concurrency
+
+### 8.1 Goroutines
 
 Goroutines are lightweight threads managed by the Go runtime:
 
@@ -575,7 +715,7 @@ go printNumbers()
 time.Sleep(time.Second)
 ```
 
-### 7.2 Channels
+### 8.2 Channels
 
 Channels are used for communication between goroutines:
 
@@ -599,10 +739,15 @@ close(ch)
 
 Additional examples:
 - [Channel Operations and Patterns](channels/main.go)
+- [Concurrency Patterns](concurrencypatterns/)
+- [Odd even](oddEven/main.go)
+- [Odd even using channels and wg](oddevenusingchannelsandwg/main.go)
+- [Odd even using just channels](oddevenusingjustchannels/main.go)
+- [Odd even using wait group](oddevenusingwaitgroup/main.go)
 
 This file demonstrates various channel operations, including creating channels, sending and receiving values, and using channels for communication between goroutines. It also shows how to use channels to implement a simple worker pool pattern.
 
-### 7.3 Select Statement
+### 8.3 Select Statement
 
 The select statement is used to work with multiple channels:
 
@@ -619,7 +764,7 @@ default:
 }
 ```
 
-### 7.4 Synchronization Primitives
+### 8.4 Synchronization Primitives
 
 Go provides several synchronization primitives:
 
@@ -680,7 +825,7 @@ Go provides several synchronization primitives:
    cond.Broadcast()
    ```
 
-### 7.5 Concurrency Patterns
+### 8.5 Concurrency Patterns
 
 - [Context Example](concurrencypatterns/context-example/main.go)
 - [Generator](concurrencypatterns/generator/)
@@ -693,9 +838,9 @@ Go provides several synchronization primitives:
 
 The context example demonstrates the use of the `context` package for managing goroutine lifecycles and cancellation. It shows how to create a context with a timeout and use it to control multiple goroutines.
 
-## 8. Error Handling
+## 9. Error Handling
 
-### 8.1 Error Interface
+### 9.1 Error Interface
 
 Go uses the `error` interface for error handling:
 
@@ -710,7 +855,7 @@ if err != nil {
 }
 ```
 
-### 8.2 Custom Errors
+### 9.2 Custom Errors
 
 You can create custom error types:
 
@@ -728,7 +873,7 @@ func doSomething() error {
 }
 ```
 
-### 8.3 Panic and Recover
+### 9.3 Panic and Recover
 
 Panic is used for unrecoverable errors, and recover can catch panics:
 
@@ -747,7 +892,7 @@ func main() {
 }
 ```
 
-### 8.4 Error Wrapping
+### 9.4 Error Wrapping
 
 Go 1.13+ introduced error wrapping:
 
@@ -767,9 +912,58 @@ if errors.As(err, &myErr) {
 }
 ```
 
-## 9. Advanced Topics
+### 9.5 Multiple Error Types
 
-### 9.1 Reflection
+Handling different error types:
+
+```go
+switch {
+case errors.Is(err, os.ErrNotExist):
+    fmt.Println("File does not exist")
+case errors.Is(err, os.ErrPermission):
+    fmt.Println("Permission denied")
+default:
+    fmt.Println("Unknown error")
+}
+```
+
+### 9.6 Error Wrapping with Custom Types
+
+Creating custom error types that support unwrapping:
+
+```go
+type DatabaseError struct {
+    Err error
+}
+
+func (e *DatabaseError) Error() string {
+    return fmt.Sprintf("database error: %v", e.Err)
+}
+
+func (e *DatabaseError) Unwrap() error {
+    return e.Err
+}
+```
+
+### 9.7 Handling io.EOF
+
+Special handling for end-of-file conditions:
+
+```go
+_, err := r.Read(buf)
+if err == io.EOF {
+    return nil // End of file, not an error
+}
+if err != nil {
+    return fmt.Errorf("read error: %w", err)
+}
+```
+
+Reference: [Error Handling Examples](errorhandling/main.go)
+
+## 10. Advanced Topics
+
+### 10.1 Reflection
 
 Reflection allows inspection of types at runtime:
 
@@ -784,7 +978,10 @@ if v.Kind() == reflect.Struct {
 }
 ```
 
-### 9.2 Generics
+Additional examples:
+- [Reflection](reflection/main.go)
+
+### 10.2 Generics
 
 Go 1.18+ supports generics:
 
@@ -800,7 +997,10 @@ PrintSlice([]int{1, 2, 3})
 PrintSlice([]string{"a", "b", "c"})
 ```
 
-### 9.3 Context Package
+Additional examples:
+- [Generics](Generics/main.go)
+
+### 10.3 Context Package
 
 The context package is used for cancellation, deadlines, and request-scoped values:
 
@@ -816,9 +1016,9 @@ case <-ctx.Done():
 }
 ```
 
-## 10. Memory Management
+## 11. Memory Management
 
-### 10.1 new vs make
+### 11.1 new vs make
 
 `new` and `make` are built-in functions for memory allocation:
 
@@ -833,7 +1033,7 @@ m := make(map[string]int)
 ch := make(chan int, 5)
 ```
 
-### 10.2 Garbage Collection
+### 11.2 Garbage Collection
 
 Go uses a concurrent mark-and-sweep garbage collector. While it's mostly automatic, you can influence it:
 
@@ -844,9 +1044,9 @@ runtime.GC() // Force a garbage collection
 // GOGC=50 means GC will run when heap size is 50% larger than after the previous GC
 ```
 
-## 11. Web Development
+## 12. Web Development
 
-### 11.1 HTTP Server Basics
+### 12.1 HTTP Server Basics
 
 Creating a basic HTTP server:
 
@@ -857,68 +1057,107 @@ http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 http.ListenAndServe(":8080", nil)
 ```
 
-### 11.2 Routing and Handlers
+Reference: [Basic HTTP Server](webserver/basichttp.go)
 
-Using the `gorilla/mux` router:
+### 12.2 HTTP Client
+
+Using the `http.Get` function to make HTTP requests:
+
+```go
+resp, err := http.Get("https://example.com")
+if err != nil {
+    // Handle error
+}
+defer resp.Body.Close()
+// Process the response
+```
+
+Reference: [HTTP Client Example](http/main.go)
+
+### 12.3 Custom Writers
+
+Implementing custom `io.Writer` for logging:
+
+```go
+type logWriter struct{}
+
+func (logWriter) Write(bs []byte) (int, error) {
+    fmt.Println(string(bs))
+    return len(bs), nil
+}
+
+io.Copy(logWriter{}, resp.Body)
+```
+
+Reference: [Custom Writer Example](http/main.go)
+
+### 12.4 Advanced HTTP Server
+
+Using `http.ServeMux` for routing and handling different HTTP methods:
+
+```go
+mux := http.NewServeMux()
+mux.HandleFunc("/", mainHandler)
+mux.HandleFunc("POST /users", createUserHandler)
+mux.HandleFunc("GET /users/{id}", getUserHandler)
+http.ListenAndServe(":8080", mux)
+```
+
+Reference: [Advanced HTTP Server](webserver/httpadvance/main.go)
+
+### 12.5 JSON Handling
+
+Encoding and decoding JSON in HTTP handlers:
+
+```go
+// Decoding JSON from request body
+var user User
+json.NewDecoder(r.Body).Decode(&user)
+
+// Encoding JSON to response
+json.NewEncoder(w).Encode(user)
+```
+
+Reference: [JSON Handling Example](webserver/httpadvance/main.go)
+
+### 12.6 URL Path Parameters
+
+Extracting path parameters from URLs:
+
+```go
+id := r.PathValue("id")
+intId, err := strconv.Atoi(id)
+```
+
+Reference: [Path Parameters Example](webserver/httpadvance/main.go)
+
+### 12.7 Gorilla Mux Router
+
+Using the Gorilla Mux router for more flexible routing:
 
 ```go
 r := mux.NewRouter()
-r.HandleFunc("/users/{id}", getUserHandler).Methods("GET")
-http.ListenAndServe(":8080", r)
+r.HandleFunc("/", homeHandler)
+r.HandleFunc("/user/{id}", userHandler)
+http.ListenAndServe(":8000", r)
 ```
 
-### 11.3 Middleware
+Reference: [Gorilla Mux Example](webserver/gorillamux/main.go)
 
-Creating middleware:
+### 12.8 Extracting URL Variables with Gorilla Mux
+
+Accessing URL variables in handler functions:
 
 ```go
-func loggingMiddleware(next http.Handler) http.Handler {
-    return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-        log.Println(r.RequestURI)
-        next.ServeHTTP(w, r)
-    })
-}
-
-r.Use(loggingMiddleware)
+vars := mux.Vars(r)
+id := vars["id"]
 ```
 
-### 11.4 Templates
+Reference: [Gorilla Mux Variables Example](webserver/gorillamux/main.go)
 
-Using HTML templates:
+These examples cover various aspects of web development in Go, including basic and advanced HTTP servers, HTTP clients, custom writers, JSON handling, URL routing, and using third-party routers like Gorilla Mux. Each topic includes a reference to the relevant Go file for more detailed implementation.
 
-```go
-tmpl, err := template.ParseFiles("template.html")
-if err != nil {
-    log.Fatal(err)
-}
-tmpl.Execute(w, data)
-```
-
-### 11.5 RESTful APIs
-
-Creating a RESTful API:
-
-```go
-type User struct {
-    ID   string `json:"id"`
-    Name string `json:"name"`
-}
-
-func getUserHandler(w http.ResponseWriter, r *http.Request) {
-    vars := mux.Vars(r)
-    id := vars["id"]
-    // Fetch user from database
-    user := User{ID: id, Name: "John Doe"}
-    json.NewEncoder(w).Encode(user)
-}
-```
-
-Additional examples:
-- [Basic Web Server](webserver/gorillamux/main.go)
-
-This example uses the Gorilla Mux router to create a more feature-rich web server compared to the standard library's `http.ServeMux`.
-
-## 12. Database Integration
+## 13. Database Integration
 
 Using the `database/sql` package with PostgreSQL:
 
@@ -941,9 +1180,9 @@ if err != nil {
 defer rows.Close()
 ```
 
-## 13. Testing
+## 14. Testing
 
-### 13.1 Unit Testing
+### 14.1 Unit Testing
 
 Writing and running tests:
 
@@ -965,7 +1204,7 @@ func TestAdd(t *testing.T) {
 // go test
 ```
 
-### 13.2 Benchmarking
+### 14.2 Benchmarking
 
 Writing and running benchmarks:
 
@@ -985,9 +1224,9 @@ Additional examples:
 
 This file contains various examples of Go language features, including switch statements, type assertions, and generics. While not strictly a test file, it demonstrates how different language constructs can be used and tested.
 
-## 14. Tools and Commands
+## 15. Tools and Commands
 
-### 14.1 Go Command
+### 15.1 Go Command
 
 The `go` command is the primary tool for managing Go source code:
 
@@ -998,7 +1237,7 @@ The `go` command is the primary tool for managing Go source code:
 - `go mod init`: Initializes a new module
 - `go mod tidy`: Adds missing and removes unused modules
 
-### 14.2 Formatting and Documentation
+### 15.2 Formatting and Documentation
 
 - `go fmt`: Formats Go source code
 - `gofmt -s`: Simplifies code in addition to formatting
@@ -1010,23 +1249,23 @@ Additional examples:
 
 This example shows how to read the contents of a file using the `ioutil.ReadFile` function. Note that in more recent versions of Go, it's recommended to use `os.ReadFile` instead.
 
-## 15. Best Practices and Patterns
+## 16. Best Practices and Patterns
 
-### 15.1 Code Organization
+### 16.1 Code Organization
 
 - Use packages to organize code
 - Follow the standard project layout
 - Use meaningful names for packages, types, and functions
 - Keep package names short and lowercase
 
-### 15.2 Performance Optimization
+### 16.2 Performance Optimization
 
 - Use profiling tools (pprof) to identify bottlenecks
 - Optimize algorithms and data structures
 - Use sync.Pool for frequently allocated and deallocated objects
 - Consider using sync.Map for concurrent map access instead of mutex-protected maps
 
-### 15.3 Concurrency Patterns
+### 16.3 Concurrency Patterns
 
 - Use channels for communication, mutexes for state
 - Implement the fan-out, fan-in pattern for parallel processing
@@ -1034,3 +1273,113 @@ This example shows how to read the contents of a file using the `ioutil.ReadFile
 - Implement worker pools for managing concurrent tasks
 
 This comprehensive guide covers all major aspects of Go programming, from basic syntax to advanced concepts and best practices. It includes detailed explanations, code examples, and practical tips to help developers write efficient and idiomatic Go code.
+
+## 17. File Operations
+
+Go provides robust support for file operations through the `os` and `io/ioutil` packages. Here are some common file operations:
+
+### 17.1 Creating a File
+
+To create a new file:
+
+```go
+file, err := os.Create("example.txt")
+if err != nil {
+    log.Fatal(err)
+}
+defer file.Close()
+
+_, err = file.WriteString("Hello, World!")
+if err != nil {
+    log.Fatal(err)
+}
+```
+
+### 17.2 Reading a File
+
+To read the entire contents of a file:
+
+```go
+content, err := os.ReadFile("example.txt")
+if err != nil {
+    log.Fatal(err)
+}
+fmt.Println(string(content))
+```
+
+For reading large files, you might want to use a buffered reader:
+
+```go
+file, err := os.Open("largefile.txt")
+if err != nil {
+    log.Fatal(err)
+}
+defer file.Close()
+
+scanner := bufio.NewScanner(file)
+for scanner.Scan() {
+    fmt.Println(scanner.Text())
+}
+
+if err := scanner.Err(); err != nil {
+    log.Fatal(err)
+}
+```
+
+### 17.3 Updating a File
+
+To append to an existing file:
+
+```go
+file, err := os.OpenFile("example.txt", os.O_APPEND|os.O_WRONLY, 0644)
+if err != nil {
+    log.Fatal(err)
+}
+defer file.Close()
+
+_, err = file.WriteString("\nAppended text")
+if err != nil {
+    log.Fatal(err)
+}
+```
+
+To overwrite a file:
+
+```go
+err := os.WriteFile("example.txt", []byte("New content"), 0644)
+if err != nil {
+    log.Fatal(err)
+}
+```
+
+### 17.4 Additional File Operations
+
+- Checking if a file exists:
+
+```go
+_, err := os.Stat("example.txt")
+if os.IsNotExist(err) {
+    fmt.Println("File does not exist")
+}
+```
+
+- Renaming a file:
+
+```go
+err := os.Rename("old.txt", "new.txt")
+if err != nil {
+    log.Fatal(err)
+}
+```
+
+- Deleting a file:
+
+```go
+err := os.Remove("example.txt")
+if err != nil {
+    log.Fatal(err)
+}
+```
+
+Reference: [File Operations](fileOperations/main.go)
+These examples cover the basic file operations in Go. Remember to handle errors appropriately and close files when you're done with them. The `defer` keyword is particularly useful for ensuring files are closed properly.

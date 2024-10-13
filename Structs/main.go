@@ -2,27 +2,32 @@ package main
 
 import "fmt"
 
+// Basic struct definition
 type contactInfo struct {
 	address string
 	zip     int
 }
 
+// Struct embedding for composition
 type person struct {
 	name string
 	age  int
-	contactInfo
+	contactInfo // Embedded struct
 }
 
+// Struct method
 func (p person) print() {
 	fmt.Printf("%+v\n", p)
 }
 
-func (p *person) updateName(n string){
+// Pointer receiver method
+func (p *person) updateName(n string) {
 	// (*p).name = n //This also works
-	p.name = n 
+	p.name = n
 }
 
 func main() {
+	// Struct initialization
 	p := person{
 		"saksham",
 		18,
@@ -31,6 +36,7 @@ func main() {
 			411057,
 		},
 	}
+	// Struct initialization with field names
 	p2 := person{
 		age:  33,
 		name: "anuj",
@@ -41,11 +47,13 @@ func main() {
 	}
 	fmt.Printf("%+v\n", p)
 	p2.print()
+	// Pointer to struct
 	p3 := &p2
 	p3.updateName("alex1")
 	p2.print()
 	p2.updateName("alex2") //without & also works the same way
 	p2.print()
+
 	// New type of primitive types
 	type Celsius float64
 	type Fahrenheit float64
@@ -83,4 +91,24 @@ func main() {
 	}
 
 	fmt.Printf("Temperature in Fahrenheit: %.2f°F\n", celsiusToFahrenheit(temp))
+
+	// Anonymous struct
+	point := struct {
+		X, Y int
+	}{10, 20}
+	fmt.Printf("Anonymous struct: %+v\n", point)
+
+	// Struct with tags
+	type User struct {
+		Name  string `json:"name" validate:"required"`
+		Email string `json:"email" validate:"required,email"`
+	}
+	user := User{Name: "John Doe", Email: "john@example.com"}
+	fmt.Printf("User: %+v\n", user)
+
+	// Struct initialization with new
+	newPerson := new(person)
+	newPerson.name = "Alice"
+	newPerson.age = 25
+	fmt.Printf("New person: %+v\n", newPerson)
 }

@@ -2,7 +2,6 @@ package main
 
 import "fmt"
 
-
 func testSwitchCases(a int){
 	switch a{
 	case 1:
@@ -48,6 +47,50 @@ func testSwitchWithGenerics2[T any](a T) {
 	}
 }
 
+// New generic functions to explain generics further
+
+// Generic function to print any slice
+func PrintSlice[T any](s []T) {
+    fmt.Print("Slice contents: ")
+    for _, v := range s {
+        fmt.Printf("%v ", v)
+    }
+    fmt.Println()
+}
+
+// Generic function to find the maximum value in a slice
+func Max[T int | float64](s []T) T {
+    if len(s) == 0 {
+        var zero T
+        return zero
+    }
+    max := s[0]
+    for _, v := range s[1:] {
+        if v > max {
+            max = v
+        }
+    }
+    return max
+}
+
+// Generic Stack implementation
+type Stack[T any] struct {
+    items []T
+}
+
+func (s *Stack[T]) Push(item T) {
+    s.items = append(s.items, item)
+}
+
+func (s *Stack[T]) Pop() (T, bool) {
+    if len(s.items) == 0 {
+        var zero T
+        return zero, false
+    }
+    item := s.items[len(s.items)-1]
+    s.items = s.items[:len(s.items)-1]
+    return item, true
+}
 
 func main() {
 	//below will cause a runtime error because the map is not initialized
@@ -88,4 +131,34 @@ func main() {
 	}(&a)
 	
 	fmt.Println(a)
+
+    // Demonstrating new generic functions
+    intSlice := []int{1, 5, 3, 7, 2}
+    floatSlice := []float64{1.1, 5.5, 3.3, 7.7, 2.2}
+    stringSlice := []string{"apple", "banana", "cherry"}
+
+    PrintSlice(intSlice)
+    PrintSlice(floatSlice)
+    PrintSlice(stringSlice)
+
+    fmt.Printf("Max of intSlice: %d\n", Max(intSlice))
+    fmt.Printf("Max of floatSlice: %.2f\n", Max(floatSlice))
+
+    // Using generic Stack
+    intStack := &Stack[int]{}
+    intStack.Push(1)
+    intStack.Push(2)
+    intStack.Push(3)
+
+    if val, ok := intStack.Pop(); ok {
+        fmt.Printf("Popped from intStack: %d\n", val)
+    }
+
+    stringStack := &Stack[string]{}
+    stringStack.Push("Hello")
+    stringStack.Push("World")
+
+    if val, ok := stringStack.Pop(); ok {
+        fmt.Printf("Popped from stringStack: %s\n", val)
+    }
 }

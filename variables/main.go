@@ -22,4 +22,19 @@ func main() {
     // This is allowed (re-assignment of x and y)
     x, y = 60, 70
 	fmt.Println(x, y)
+
+    // More examples of variable declaration and initialization
+    var a int // Declaration without initialization
+    var b int = 5 // Declaration with initialization
+    c := 10 // Short variable declaration
+    var d, e int = 15, 20 // Multiple variable declaration
+    f, g := 25, "hello" // Multiple variable declaration with type inference
+    var (
+        h int
+        i string
+        j bool
+    ) // Block declaration
+    const k = 100 // Constant declaration
+    
+    fmt.Println(a, b, c, d, e, f, g, h, i, j, k)
 }
