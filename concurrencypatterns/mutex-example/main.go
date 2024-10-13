@@ -15,9 +15,9 @@ func process(num int) int {
 
 func processData(wg *sync.WaitGroup, num int, result *[]int) {
 	defer wg.Done()
-	// mu.Lock()
+	mu.Lock()
 	*result = append(*result, process(num))
-	// mu.Unlock()
+	mu.Unlock()
 }
 
 func main() {
