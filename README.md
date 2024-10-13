@@ -1,4 +1,4 @@
-# Comprehensive Go Programming Guide
+# GO-Study
 
 ## Table of Contents
 
