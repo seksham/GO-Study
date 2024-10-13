@@ -1426,6 +1426,9 @@ Note that the `Error()` method is not called when using reflection-based formatt
 
 This comprehensive overview covers the essential aspects of error handling in Go, including creating and using errors, custom error types, panic and recover, error wrapping and unwrapping, and best practices for error handling in various scenarios.
 
+Example references:
+- [Error Handling](errorhandling/main.go)
+
 ## 10. Advanced Topics
 
 ### 10.1 Reflection
