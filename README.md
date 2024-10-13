@@ -449,6 +449,8 @@ func example() {
 
 Multiple defers:
 
+Deferred functions are executed in Last-In-First-Out (LIFO) order. When multiple defer statements are used, they are pushed onto a stack and executed in reverse order when the surrounding function returns.
+
 ```go
 func multipleDefers() {
     defer fmt.Println("First defer")
@@ -464,6 +466,8 @@ func multipleDefers() {
 // Second defer
 // First defer
 ```
+
+In this example, the deferred functions are executed in reverse order of their declaration after the main function body completes.
 
 ## 4. Data Structures
 
@@ -744,7 +748,7 @@ Additional examples:
 - [Shape Interface](shapeInterface/main.go)
 ### 7.2 Stringer Interface
 
-The Stringer interface is used for custom string representations:
+The Stringer interface is used for custom string representations of types. It's particularly useful for printing custom types in a human-readable format.
 
 ```go
 type Stringer interface {
@@ -766,9 +770,11 @@ fmt.Println(p) // Output: Alice (30 years old)
 
 - [Stringer Interface](stringerinterface/main.go)
 
+By implementing the String() method, we provide a custom string representation for the Person struct. This is automatically used when the struct is printed or converted to a string.
+
 ### 7.3 Sort.Interface
 
-The sort.Interface is used for custom sorting:
+The sort.Interface is used for custom sorting of collections. It requires implementing three methods: Len(), Less(), and Swap().
 
 ```go
 type Interface interface {
@@ -792,6 +798,8 @@ people := []Person{
 sort.Sort(ByAge(people))
 fmt.Println(people)
 ```
+
+This example demonstrates how to implement custom sorting for a slice of Person structs based on their age. By implementing the sort.Interface, we can use the standard library's sort.Sort function to sort our custom types.
 
 Additional examples:
 - [Sort Interface](sortinterface/main.go)
@@ -1119,7 +1127,10 @@ case <-ctx.Done():
 
 ### 11.1 new vs make
 
-`new` and `make` are built-in functions for memory allocation:
+`new` and `make` are built-in functions for memory allocation, but they serve different purposes:
+
+- `new` is used to allocate memory for a type and returns a pointer to a zero-initialized value of that type.
+- `make` is specifically used to create slices, maps, and channels, and returns an initialized (not zeroed) value of the specified type.
 
 ```go
 // new returns a pointer to a zero-initialized value
@@ -1127,10 +1138,12 @@ p := new(int)
 fmt.Println(*p) // Output: 0
 
 // make is used to create slices, maps, and channels
-s := make([]int, 5, 10)
-m := make(map[string]int)
-ch := make(chan int, 5)
+s := make([]int, 5, 10)  // slice with length 5 and capacity 10
+m := make(map[string]int)  // empty map
+ch := make(chan int, 5)  // buffered channel with capacity 5
 ```
+
+Understanding the difference between `new` and `make` is crucial for proper memory allocation and initialization in Go programs.
 
 ### 11.2 Garbage Collection
 
