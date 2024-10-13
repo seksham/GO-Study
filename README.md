@@ -37,7 +37,106 @@ Go has specific naming conventions that contribute to code readability:
 - Interface names: PascalCase, often ending with '-er' suffix
 - Struct names: PascalCase for exported, camelCase for unexported
 
-### 2.2 Data Types
+### 2.2 Variables
+
+Variables in Go are used to store and manipulate data. Here's a comprehensive overview of variables in Go:
+
+#### Declaration and Initialization
+
+1. Basic declaration:
+   ```go
+   var name string
+   var age int
+   ```
+
+2. Declaration with initialization:
+   ```go
+   var name string = "John"
+   var age int = 30
+   ```
+
+3. Short declaration (type inference):
+   ```go
+   name := "John"
+   age := 30
+   ```
+
+4. Multiple declarations:
+   ```go
+   var (
+       name string
+       age  int
+       isStudent bool
+   )
+   ```
+
+#### Zero Values
+
+Variables declared without an explicit initial value are given their zero value:
+- Numeric types: `0`
+- Boolean type: `false`
+- String type: `""`
+- Pointer types: `nil`
+
+#### Constants
+
+Constants are declared using the `const` keyword:
+```go
+const Pi = 3.14159
+const (
+    StatusOK = 200
+    StatusNotFound = 404
+)
+```
+
+#### Type Conversion
+
+Go requires explicit type conversion:
+```go
+var x int = 10
+var y float64 = float64(x)
+```
+
+#### Scope
+
+- Package-level variables: Declared outside any function
+- Local variables: Declared inside a function
+- Block-level variables: Declared inside a block (e.g., if statement)
+
+#### Naming Conventions
+
+- Use camelCase for variable names
+- Exported variables (accessible from other packages) start with an uppercase letter
+
+#### Variable Shadowing
+
+Inner blocks can declare variables with the same name as outer blocks, shadowing the outer variable:
+```go
+x := 10
+if true {
+    x := 20 // This x shadows the outer x
+    fmt.Println(x) // Prints 20
+}
+fmt.Println(x) // Prints 10
+```
+
+#### Unused Variables
+
+Go does not allow unused variables. The compiler will throw an error if a variable is declared but not used.
+
+#### Blank Identifier
+
+The blank identifier `_` can be used to ignore values:
+```go
+x, _ := someFunction() // Ignores the second return value
+```
+
+Additional examples:
+- [Variable Examples](variables/main.go)
+
+This overview covers the essential aspects of variables in Go, including declaration, initialization, scope, naming conventions, and special features like the blank identifier.
+
+### 2.3 Data Types
 
 Go has several built-in data types:
 
@@ -61,7 +160,7 @@ Go has several built-in data types:
    - Interface: Defines a set of method signatures
    - Channel: Used for communication between goroutines
 
-### 2.3 Operators
+### 2.4 Operators
 
 Go provides various operators:
 
@@ -72,7 +171,7 @@ Go provides various operators:
 5. Assignment: `=`, `+=`, `-=`, `*=`, `/=`, etc.
 6. Address and Pointer: `&`, `*`
 
-### 2.4 Control Structures
+### 2.5 Control Structures
 
 Go supports standard control structures:
 
@@ -136,7 +235,7 @@ Go supports standard control structures:
    defer function()
    ```
 
-### 2.5 Composite Literals and Initializers
+### 2.6 Composite Literals and Initializers
 
 Composite literals provide a concise way to create and initialize composite types:
 
