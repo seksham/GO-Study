@@ -85,11 +85,16 @@ func (consoleLogger) log(message string) {
 	fmt.Println("Log:", message)
 }
 
+// This is composition, not embedding. The service struct has a logger field,
+// which means it "has-a" logger, but the logger is not part of the service's type.
+// Composition allows the service to use the logger's functionality without inheriting its type.
 type service struct {
-	logger logger
+	logger logger // logger is a field of type logger
 }
 
-// ii. Embedding interface into the struct
+// ii. Embedding interface into the struct.
+// This is embedding, not composition. The embeddedService struct "is-a" logger,
+// because it includes the logger interface as part of its type.
 type embeddedService struct {
 	logger
 }
