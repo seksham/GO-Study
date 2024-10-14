@@ -796,7 +796,7 @@ type FileWriter struct {
     // ...
 }
 ```
-
+```
 In this example, `FileWriter` implicitly implements the `Writer` interface because it has a `Write` method with the correct signature.
 
 Interface Values:
@@ -1328,13 +1328,13 @@ type NetworkError struct {
 }
 
 func (e *NetworkError) Error() string {
-    return fmt.Sprintf("network error with code: %d", e.Code)
+    return fmt.Sprintf("Network error with code: %d", e.Code)
 }
 
 func handleError(err error) {
     switch e := err.(type) {
     case *NetworkError:
-        fmt.Printf("Network error with code %d\n", e.Code)
+        fmt.Printf("Network error with code %d\n", e.Code) // Same output as fmt.Println(e)
     default:
         fmt.Println("Unknown error:", err)
     }
@@ -1343,20 +1343,131 @@ func handleError(err error) {
 
 ### 9.8 errors.Is and errors.As
 
-These functions make it easier to check for specific errors in error chains (Go 1.13+):
+Go 1.13 introduced `errors.Is` and `errors.As` to improve error handling, especially when dealing with wrapped errors. These functions make it easier to check for specific error types or values in an error chain.
+
+#### errors.Is
+
+`errors.Is` checks if a specific error value exists anywhere in the error chain.
+
+Syntax:
+```go
+func Is(err, target error) bool
+```
+
+Use `errors.Is` when you want to compare an error to a sentinel error value.
+
+Example:
 
 ```go
 var ErrNotFound = errors.New("not found")
 
-if errors.Is(err, ErrNotFound) {
-    // Handle not found error
+func fetchItem(id string) (Item, error) {
+    // ... implementation ...
+    return Item{}, fmt.Errorf("failed to fetch item: %w", ErrNotFound)
 }
 
-var netErr *NetworkError
-if errors.As(err, &netErr) {
-    fmt.Printf("Network error code: %d\n", netErr.Code)
+func main() {
+    _, err := fetchItem("123")
+    if errors.Is(err, ErrNotFound) {
+        fmt.Println("The item was not found")
+    } else {
+        fmt.Println("An unknown error occurred:", err)
+    }
 }
 ```
+
+In this example, `errors.Is` checks if `ErrNotFound` is anywhere in the error chain, even if it's wrapped.
+
+#### errors.As
+
+`errors.As` finds the first error in the error chain that matches the target type, and if so, sets the target to that error value.
+
+Syntax:
+```go
+func As(err error, target interface{}) bool
+```
+
+Use `errors.As` when you need to check for a specific error type and access its fields or methods.
+
+Example:
+
+```go
+type NetworkError struct {
+    Code    int
+    Message string
+}
+
+func (e *NetworkError) Error() string {
+    return fmt.Sprintf("network error: %s (code: %d)", e.Message, e.Code)
+}
+
+func fetchData() error {
+    // Simulating a network error
+    return fmt.Errorf("failed to fetch data: %w", &NetworkError{Code: 500, Message: "Internal Server Error"})
+}
+
+func main() {
+    err := fetchData()
+
+    var netErr *NetworkError
+    if errors.As(err, &netErr) {
+        fmt.Printf("Network error occurred. Code: %d, Message: %s\n", netErr.Code, netErr.Message)
+    } else {
+        fmt.Println("An unknown error occurred:", err)
+    }
+}
+```
+
+In this example, `errors.As` checks if there's a `NetworkError` in the error chain. If found, it sets `netErr` to point to that error, allowing access to its fields.
+
+#### Benefits over Type Assertions
+
+1. Works with wrapped errors: Both functions work through entire error chains, not just the topmost error.
+2. Nil-safety: Unlike type assertions, these functions handle nil errors gracefully.
+3. Interface satisfaction: `errors.As` can find errors that implement an interface, not just concrete types.
+
+Example demonstrating these benefits:
+
+```go
+type CustomError interface {
+    CustomError() string
+}
+
+type MyError struct {
+    Msg string
+}
+
+func (e *MyError) Error() string {
+    return e.Msg
+}
+
+func (e *MyError) CustomError() string {
+    return "This is a custom error: " + e.Msg
+}
+
+func someOperation() error {
+    return fmt.Errorf("wrapped error: %w", &MyError{Msg: "something went wrong"})
+}
+
+func main() {
+    err := someOperation()
+
+    // Using errors.As with an interface
+    var customErr CustomError
+    if errors.As(err, &customErr) {
+        fmt.Println(customErr.CustomError())
+    }
+
+    // Safe with nil errors
+    var nilErr error
+    fmt.Println(errors.Is(nilErr, io.EOF)) // false, no panic
+
+    // Works through wrapped errors
+    fmt.Println(errors.Is(err, &MyError{})) // true
+}
+```
+
+This expanded explanation and examples demonstrate how `errors.Is` and `errors.As` provide powerful and flexible error handling capabilities in Go, especially when dealing with error wrapping and custom error types.
 
 ### 9.9 Multiple Return Values for Errors
 
