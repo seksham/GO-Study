@@ -96,17 +96,27 @@ func main() {
 	t := time.Now()
 	done := make(chan bool)
 	defer close(done)
+
+	// Fan-out: Create a single source of random integers
 	randomIntStream := streamGenerator(done, randIntFetcher)
-	// primeIntStream := primeStreamGenerator(done, randomIntStream)
+
 	availableCPUs := runtime.NumCPU()
-	fmt.Println("avaliable cpus are:", availableCPUs)
-	primeFinderChannels := make([]<- chan int, availableCPUs)
-	for i := 0; i<availableCPUs; i++{
+	fmt.Println("available cpus are:", availableCPUs)
+
+	// Fan-out: Distribute work across multiple goroutines
+	// Create multiple prime finder channels, each processing the random int stream
+	primeFinderChannels := make([]<-chan int, availableCPUs)
+	for i := 0; i < availableCPUs; i++ {
 		primeFinderChannels[i] = primeStreamGenerator(done, randomIntStream)
 	}
+
+	// Fan-in: Combine results from multiple channels into a single channel
 	finalChannel := fanIn(done, primeFinderChannels...)
+
+	// Process the results from the combined channel
 	for num := range take(done, finalChannel, 10) {
 		fmt.Println(num)
 	}
+
 	fmt.Println(time.Since(t))
 }
