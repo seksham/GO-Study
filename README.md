@@ -288,6 +288,81 @@ Composite literals provide a concise way to create and initialize composite type
    }
    ```
 
+### 2.7 Formatting Functions
+
+Go provides a variety of formatting functions in the `fmt` package for printing and string manipulation:
+
+1. Printing Functions:
+   - `fmt.Print`: Prints its arguments with their default formats.
+   - `fmt.Println`: Like Print, but adds spaces between arguments and a newline at the end.
+   - `fmt.Printf`: Formats according to a format specifier and prints.
+
+2. String Formatting Functions:
+   - `fmt.Sprint`: Returns a string containing the default formats of its arguments.
+   - `fmt.Sprintln`: Like Sprint, but adds spaces between arguments and a newline at the end.
+   - `fmt.Sprintf`: Returns a string formatted according to a format specifier.
+
+3. Formatted I/O:
+   - `fmt.Fprintf`: Formats and writes to a specified io.Writer.
+   - `fmt.Fscanf`: Scans formatted text from a specified io.Reader.
+
+4. Scanning Functions:
+   - `fmt.Scan`: Scans text read from standard input, storing successive space-separated values into successive arguments.
+   - `fmt.Scanf`: Scans text read from standard input, parsing according to a format string.
+   - `fmt.Scanln`: Like Scan, but stops scanning at a newline.
+
+5. Formatting Directives:
+   Formatting directives are used with `Printf`, `Sprintf`, and related functions to specify how to format values. Here are some common directives:
+
+   - `%v`: The value in a default format
+   - `%+v`: The value in a default format with field names for structs
+   - `%#v`: A Go-syntax representation of the value
+   - `%T`: A Go-syntax representation of the type of the value
+   - `%t`: The word true or false (for boolean values)
+   - `%d`: Base 10 integer
+   - `%b`: Base 2 integer
+   - `%o`: Base 8 integer
+   - `%x`, `%X`: Base 16 integer, with lower-case/upper-case letters for a-f
+   - `%f`, `%F`: Decimal point, no exponent
+   - `%e`, `%E`: Scientific notation
+   - `%s`: String
+   - `%q`: Double-quoted string
+   - `%p`: Pointer address
+   - `%c`: The character represented by the corresponding Unicode code point
+
+Example usage of formatting directives:
+
+```go
+num := 42
+pi := 3.14159
+name := "Gopher"
+
+fmt.Printf("Integer: %d\n", num)
+fmt.Printf("Float: %.2f\n", pi)
+fmt.Printf("String: %s\n", name)
+fmt.Printf("Boolean: %t\n", true)
+fmt.Printf("Value: %v\n", num)
+fmt.Printf("Pointer: %p\n", &num)
+fmt.Printf("Type: %T\n", pi)
+fmt.Printf("Quoted string: %q\n", name)
+fmt.Printf("Hex: %#x\n", num)
+```
+
+Output:
+```
+Integer: 42
+Float: 3.14
+String: Gopher
+Boolean: true
+Value: 42
+Pointer: 0xc0000b4008
+Type: float64
+Quoted string: "Gopher"
+Hex: 0x2a
+```
+
+These formatting directives provide fine-grained control over how values are formatted in output strings. They are essential for creating well-formatted, readable output in Go programs.
+
 ## 3. Functions and Methods
 
 ### 3.1 Function Basics
@@ -741,8 +816,6 @@ You can create one-off structs without defining a new type:
 point := struct {
     X, Y int
 }{10, 20}
-
-fmt.Println(point.X, point.Y)
 ```
 
 ### 6.8 Comparing Structs
@@ -795,7 +868,6 @@ A type implicitly implements an interface if it defines all the methods specifie
 type FileWriter struct {
     // ...
 }
-```
 ```
 In this example, `FileWriter` implicitly implements the `Writer` interface because it has a `Write` method with the correct signature.
 
@@ -1151,7 +1223,7 @@ Here's a brief overview of some common concurrency patterns in Go:
    Examples: [Mutex Map](concurrencypatterns/mutex-map/), [Mutex Example](concurrencypatterns/mutex-example/)
 
 7. Or-Done pattern:
-   Allows for cancellation of multiple channels simultaneously. A separate re-usable function is created for this pattern. It is useful when you have multiple channels and you want to cancel them all when one of them is done.
+   Allows for cancellation of multiple channels simultaneously. A separate re-usable function is created for this pattern. It is useful when you have multiple channels and want to cancel them all when one of them is done.
    Example: [Or Done](concurrencypatterns/or-done/)
 
 These patterns demonstrate various techniques for managing concurrency, from distributing work and combining results to protecting shared resources and handling cancellation.
@@ -1539,6 +1611,8 @@ if errors.As(err, &netErr) {
     fmt.Printf("Network error code: %d\n", netErr.Code)
 }
 ```
+
+fmt.Println(point.X, point.Y)
 
 This allows for type safety, modification of the caller's variable, and flexibility in handling both pointer and non-pointer error types.
 
