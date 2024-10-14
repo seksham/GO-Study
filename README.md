@@ -492,7 +492,7 @@ s := make([]int, 5, 10)
 
 Additional examples:
 
-- [Basic Array and Slice Operations](arrayAndSlice/main.go)
+- [Basic Array and Slice Operations](arrayAndSlices/main.go)
 - [2D Slices](2dslices/main.go)
 
 2D slices example:
