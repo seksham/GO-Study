@@ -795,11 +795,6 @@ A type implicitly implements an interface if it defines all the methods specifie
 type FileWriter struct {
     // ...
 }
-
-func (fw FileWriter) Write(data []byte) (int, error) {
-    // Implementation
-    return len(data), nil
-}
 ```
 
 In this example, `FileWriter` implicitly implements the `Writer` interface because it has a `Write` method with the correct signature.
@@ -1134,25 +1129,7 @@ Here's a brief overview of some common concurrency patterns in Go:
    1. Lexical confinement: Data confined by scope (e.g., local variables).
    2. Ad-hoc confinement: Data confined by convention (e.g., only one goroutine accesses shared data).
 
-   Example from concurrencypatterns/confinement/main.go:
-   ```go
-   func processData(wg *sync.WaitGroup, num int, result *int) {
-       defer wg.Done()
-       *result = process(num)
-   }
-
-   func main() {
-       a := []int{1, 2, 3, 4, 5}
-       result := make([]int, len(a))
-       var wg sync.WaitGroup
-       for i, num := range a {
-           wg.Add(1)
-           go processData(&wg, num, &result[i])
-       }
-       wg.Wait()
-       fmt.Println(result)
-   }
-   ```
+   Example: [Confinement](concurrencypatterns/confinement/main.go)
 
    This example demonstrates confinement by:
    1. Each goroutine works on its own slice element (`&result[i]`).
@@ -1165,33 +1142,9 @@ Here's a brief overview of some common concurrency patterns in Go:
 
    Without confinement, if using a shared slice, a mutex would be required:
 
-   ```go
-   var mu sync.Mutex
-   var result []int
-
-   func processDataWithoutConfinement(wg *sync.WaitGroup, num int) {
-       defer wg.Done()
-       processed := process(num)
-       mu.Lock()
-       result = append(result, processed)
-       mu.Unlock()
-   }
-
-   func main() {
-       a := []int{1, 2, 3, 4, 5}
-       result = make([]int, 0, len(a))
-       var wg sync.WaitGroup
-       for _, num := range a {
-           wg.Add(1)
-           go processDataWithoutConfinement(&wg, num)
-       }
-       wg.Wait()
-       fmt.Println(result)
-   }
-   ```
+   Example: [Mutex Example](concurrencypatterns/mutex-example/)
 
    Here, a mutex is needed to protect the shared `result` slice from concurrent access, making the code more complex and potentially less performant than the confined version.
-   Example: [Confinement](concurrencypatterns/confinement/)
 
 6. Mutex for shared state:
    Uses mutual exclusion to protect shared data structures from concurrent access. It can be avoided by using confinement in above example.
@@ -1593,6 +1546,11 @@ case <-ctx.Done():
     fmt.Println(ctx.Err()) // prints "context deadline exceeded"
 }
 ```
+
+func (fw FileWriter) Write(data []byte) (int, error) {
+    // Implementation
+    return len(data), nil
+}
 
 ## 11. Memory Management
 
