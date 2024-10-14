@@ -937,10 +937,16 @@ Goroutines vs OS threads vs threads in other languages:
 
 Goroutines are lightweight because:
 1. They have a smaller stack size (starting at 2KB)
-2. They are multiplexed onto a small number of OS threads
-3. Context switching between goroutines is faster than OS threads
+2. They are multiplexed onto a small number of OS threads:
+   This means that many goroutines can run on a single OS thread. The Go runtime scheduler manages this multiplexing, allowing it to run thousands or even millions of goroutines on just a few OS threads. This is more efficient than creating a new OS thread for each concurrent task, as OS threads are more resource-intensive.
 
-The number of goroutines mapped to an OS thread is dynamic and managed by the Go runtime scheduler. Many goroutines can be multiplexed onto a single OS thread, allowing for efficient concurrency without the overhead of numerous OS threads.
+3. Context switching between goroutines is faster than OS threads:
+   Context switching is the process of storing the state of a thread or goroutine so that it can be resumed later, and then switching to run another thread or goroutine. For goroutines, this process is managed by the Go runtime and is much faster than OS-level context switches for several reasons:
+   - Goroutine state is smaller and simpler than full thread state, so it's quicker to save and restore.
+   - The Go scheduler doesn't need to switch to kernel mode to perform a context switch, which is a time-consuming operation for OS threads.
+   - The Go scheduler can make more intelligent decisions about when to switch contexts, as it has more information about the goroutines it's managing than the OS has about threads.
+
+These factors contribute to making goroutines much more lightweight and efficient than OS threads, allowing Go programs to handle high levels of concurrency with relatively low overhead.
 
 ```go
 func printNumbers() {
