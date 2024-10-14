@@ -67,20 +67,20 @@ func main(){
 //     select{}
 // }
 
-package main
+// package main
 
 // func main() {
 //     // This will cause the program to hang indefinitely
 //     select{}
 // }
 
-func main() {
-	c := make(chan string)
+// func main() {
+// 	c := make(chan string)
 
-	go func() {
-		c <- "Hi there!"
-	}()
+// 	go func() {
+// 		c <- "Hi there!"
+// 	}()
 
-	message := <-c
-	fmt.Println("Received:", message)
-}
+// 	message := <-c
+// 	fmt.Println("Received:", message)
+// }
