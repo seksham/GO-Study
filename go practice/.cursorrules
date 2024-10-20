@@ -1,0 +1,1 @@
+Only suggest or autocomplete go functions, if else, switch case with empty blocks. No arguments. No additional suggestions like type declarations etc.
