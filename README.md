@@ -1886,6 +1886,103 @@ Reference: [Gorilla Mux Variables Example](webserver/gorillamux/main.go)
 
 These examples cover various aspects of web development in Go, including basic and advanced HTTP servers, HTTP clients, custom writers, JSON handling, URL routing, and using third-party routers like Gorilla Mux. Each topic includes a reference to the relevant Go file for more detailed implementation.
 
+### 12.9 Middleware
+
+Middleware in Go is a powerful concept, especially in the context of HTTP servers. It allows you to process requests and responses before they reach your main handler or after they've been processed by your handler.
+
+#### Basic Structure of Middleware
+
+The basic structure of middleware in Go is a function that takes an `http.Handler` and returns an `http.Handler`:
+
+```go
+func middlewareName(next http.Handler) http.Handler {
+    return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+        // Pre-processing logic
+        next.ServeHTTP(w, r)
+        // Post-processing logic
+    })
+}
+```
+
+#### Key Components
+
+1. `http.Handler`: An interface with a single method:
+   ```go
+   type Handler interface {
+       ServeHTTP(ResponseWriter, *Request)
+   }
+   ```
+
+2. `http.HandlerFunc`: A type that allows regular functions to be used as HTTP handlers:
+   ```go
+   type HandlerFunc func(ResponseWriter, *Request)
+   ```
+
+3. `next.ServeHTTP(w, r)`: Calls the next handler in the chain.
+
+#### Example: Logging Middleware
+
+Here's an example of a simple logging middleware:
+
+```go
+func loggingMiddleware(next http.Handler) http.Handler {
+    return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+        log.Printf("Received request: %s %s", r.Method, r.URL.Path)
+        next.ServeHTTP(w, r)
+        log.Println("Finished processing request")
+    })
+}
+```
+
+#### Using Middleware
+
+To use middleware in your Go HTTP server:
+
+```go
+func main() {
+    mux := http.NewServeMux()
+    mux.HandleFunc("/", homeHandler)
+
+    wrappedMux := loggingMiddleware(mux)
+    log.Fatal(http.ListenAndServe(":8080", wrappedMux))
+}
+
+func homeHandler(w http.ResponseWriter, r *http.Request) {
+    fmt.Fprintf(w, "Welcome Home!")
+}
+```
+
+#### Context in Middleware
+
+Middleware is an excellent place to use and modify the request's context. Here's an example of middleware that adds a request ID to the context:
+
+```go
+func requestIDMiddleware(next http.Handler) http.Handler {
+    return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+        requestID := generateRequestID()
+        ctx := context.WithValue(r.Context(), "requestID", requestID)
+        r = r.WithContext(ctx)
+        next.ServeHTTP(w, r)
+    })
+}
+```
+
+#### Chaining Middleware
+
+You can chain multiple middleware functions:
+
+```go
+func main() {
+    mux := http.NewServeMux()
+    mux.HandleFunc("/", homeHandler)
+
+    wrappedMux := loggingMiddleware(requestIDMiddleware(mux))
+    log.Fatal(http.ListenAndServe(":8080", wrappedMux))
+}
+```
+
+In this setup, the request flows through `loggingMiddleware`, then `requestIDMiddleware`, before reaching the appropriate handler.
+
 ## 13. Database Integration
 
 Using the `database/sql` package with PostgreSQL:
