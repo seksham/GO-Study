@@ -1159,8 +1159,12 @@ The select statement is used to work with multiple channels:
 
 ```go
 select {
-case msg1 := <-ch1:
-    fmt.Println("Received from ch1:", msg1)
+case msg1, ok := <-ch1:
+    if !ok {
+        fmt.Println("ch1 is closed")
+    } else {
+        fmt.Println("Received from ch1:", msg1)
+    }
 case msg2 := <-ch2:
     fmt.Println("Received from ch2:", msg2)
 case ch3 <- 42:
@@ -1169,6 +1173,34 @@ default:
     fmt.Println("No channel operations ready")
 }
 ```
+
+Key points about select with closed channels:
+
+1. When receiving from a channel, you can use the two-value form of channel receive to check if the channel is closed.
+2. For a closed channel, the receive operation `<-ch` returns immediately with the zero value of the channel's type and `ok` set to `false`.
+3. The select statement will choose a closed channel if no other cases are ready, allowing you to detect and handle closed channels.
+4. Sending on a closed channel will cause a panic, so it's important to ensure a channel is open before sending.
+
+Example with a closed channel:
+
+```go
+ch := make(chan int)
+close(ch)
+
+select {
+case val, ok := <-ch:
+    if !ok {
+        fmt.Println("Channel is closed")
+    } else {
+        fmt.Println("Received:", val)
+    }
+default:
+    fmt.Println("No value received")
+}
+// Output: Channel is closed
+```
+
+This behavior allows for graceful handling of channel closure in concurrent programs.
 
 ### 8.4 Synchronization Primitives
 
