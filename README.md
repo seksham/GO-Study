@@ -959,15 +959,26 @@ fmt.Println(p) // Output: Alice (30 years old)
 
 By implementing the String() method, we provide a custom string representation for the Person struct. This is automatically used when the struct is printed or converted to a string.
 
-### 7.3 Sort.Interface
+I'd be happy to modify the content to include information about `sort.Slice` and the differences between `sort.Sort` and `sort.Slice`. Here's an updated version:
 
-The sort.Interface is used for custom sorting of collections. It requires implementing three methods: Len(), Less(), and Swap().
+### 7.3 Sorting in Go
+
+Go provides multiple ways to sort collections, including `sort.Sort`, `sort.Slice`, and `slices.Sort`. Each method has its own use cases and advantages.
+
+#### 7.3.1 sort.Interface
+
+The `sort.Interface` is used for custom sorting of collections. It requires implementing three methods: `Len()`, `Less()`, and `Swap()`.
 
 ```go
 type Interface interface {
     Len() int
     Less(i, j int) bool
     Swap(i, j int)
+}
+
+type Person struct {
+    Name string
+    Age  int
 }
 
 type ByAge []Person
@@ -986,7 +997,70 @@ sort.Sort(ByAge(people))
 fmt.Println(people)
 ```
 
-This example demonstrates how to implement custom sorting for a slice of Person structs based on their age. By implementing the sort.Interface, we can use the standard library's sort.Sort function to sort our custom types.
+This example demonstrates how to implement custom sorting for a slice of `Person` structs based on their age using `sort.Sort`.
+
+#### 7.3.2 sort.Slice
+
+`sort.Slice` is a more convenient way to sort slices, introduced in Go 1.8. It doesn't require implementing the `sort.Interface`:
+
+```go
+people := []Person{
+    {"Alice", 30},
+    {"Bob", 25},
+    {"Charlie", 35},
+}
+
+sort.Slice(people, func(i, j int) bool {
+    return people[i].Age < people[j].Age
+})
+
+fmt.Println(people)
+```
+
+#### 7.3.3 slices.Sort (Go 1.21+)
+
+In Go 1.21, the `slices` package was introduced, providing a type-safe and more efficient sorting method:
+
+```go
+import "slices"
+
+people := []Person{
+    {"Alice", 30},
+    {"Bob", 25},
+    {"Charlie", 35},
+}
+
+slices.SortFunc(people, func(a, b Person) int {
+    return a.Age - b.Age
+})
+
+fmt.Println(people)
+```
+
+#### 7.3.4 Differences and Use Cases
+
+1. `sort.Sort`:
+   - Requires implementing `sort.Interface`
+   - Useful for custom types with complex sorting logic
+   - More verbose but offers full control over sorting behavior
+
+2. `sort.Slice`:
+   - More convenient for one-off sorting operations
+   - Doesn't require implementing `sort.Interface`
+   - Less type-safe (uses `interface{}` internally)
+   - Slightly less performant than `sort.Sort`
+
+3. `slices.Sort` / `slices.SortFunc`:
+   - Type-safe and generally more efficient
+   - Available only in Go 1.21+
+   - Preferred method for simple sorting operations in newer Go versions
+
+Choose the method that best fits your use case:
+- Use `sort.Sort` for custom types with complex sorting logic or when you need to reuse the sorting logic.
+- Use `sort.Slice` for quick, one-off sorting operations in older Go versions.
+- Use `slices.Sort` or `slices.SortFunc` for efficient, type-safe sorting in Go 1.21+.
+
+This overview covers the main sorting methods in Go, their differences, and appropriate use cases. Is there any specific aspect of sorting in Go you'd like me to elaborate on?
 
 Additional examples:
 - [Sort Interface](sortinterface/main.go)
