@@ -1299,19 +1299,97 @@ Go provides several synchronization primitives:
 
 Here's a brief overview of some common concurrency patterns in Go:
 
-1. Fan-Out, Fan-In:
-   Distributes work across multiple goroutines (fan-out) and then combines the results (fan-in).
-   Example: [Prime Fan-in Fan-out](concurrencypatterns/prime-fan-in-fan-out/)
+1. Worker Pool Pattern:
+```go
+func workerPool(numWorkers int, jobs <-chan int, results chan<- int) {
+    for i := 0; i < numWorkers; i++ {
+        go func() {
+            for job := range jobs {
+                results <- processJob(job)
+            }
+        }()
+    }
+}
+```
 
-2. Pipeline:
-   A series of stages connected by channels, where each stage is a group of goroutines running the same function.
-   Example: [Prime Pipeline](concurrencypatterns/prime-pipeline/)
+2. Generator Pattern:
+```go
+func generator(nums ...int) <-chan int {
+    out := make(chan int)
+    go func() {
+        for _, n := range nums {
+            out <- n
+        }
+        close(out)
+    }()
+    return out
+}
+```
 
-3. Generator:
-   A function that returns a channel, often used to generate a sequence of values.
-   Example: [Generator](concurrencypatterns/generator/)
+3. Fan-Out, Fan-In Pattern:
+Distributes work across multiple goroutines (fan-out) and then combines the results (fan-in).
 
-4. Context:
+```go
+func fanOut(input <-chan int, numWorkers int) []<-chan int {
+    outputs := make([]<-chan int, numWorkers)
+    for i := 0; i < numWorkers; i++ {
+        outputs[i] = worker(input)
+    }
+    return outputs
+}
+
+func fanIn(inputs ...<-chan int) <-chan int {
+    out := make(chan int)
+    var wg sync.WaitGroup
+    for _, ch := range inputs {
+        wg.Add(1)
+        go func(c <-chan int) {
+            defer wg.Done()
+            for n := range c {
+                out <- n
+            }
+        }(ch)
+    }
+    go func() {
+        wg.Wait()
+        close(out)
+    }()
+    return out
+}
+```
+
+4. Pipeline Pattern:
+A series of stages connected by channels, where each stage is a group of goroutines running the same function.
+
+```go
+func stage1(in <-chan int) <-chan int {
+    out := make(chan int)
+    go func() {
+        defer close(out)
+        for n := range in {
+            out <- n * 2
+        }
+    }()
+    return out
+}
+
+func stage2(in <-chan int) <-chan int {
+    out := make(chan int)
+    go func() {
+        defer close(out)
+        for n := range n {
+            out <- n + 1
+        }
+    }()
+    return out
+}
+
+// Usage:
+// input := generator(1, 2, 3)
+// result := stage2(stage1(input))
+```
+
+5. Context Pattern:
    Uses the `context` package for managing cancellation, deadlines, and passing request-scoped values across API boundaries and between processes.
    Key features:
    - Cancellation: Allows canceling long-running operations
@@ -1332,9 +1410,8 @@ Here's a brief overview of some common concurrency patterns in Go:
    }
    ```
    The context example demonstrates the use of the `context` package for managing goroutine lifecycles and cancellation. It shows how to create a context with a timeout and use it to control multiple goroutines.
-   Example: [Context Example](concurrencypatterns/context-example/main.go)
 
-5. Confinement:
+6. Confinement:
    Restricts data access to a single goroutine, simplifying concurrent programming and avoiding race conditions. Two types:
    1. Lexical confinement: Data confined by scope (e.g., local variables).
    2. Ad-hoc confinement: Data confined by convention (e.g., only one goroutine accesses shared data).
@@ -1350,23 +1427,36 @@ Here's a brief overview of some common concurrency patterns in Go:
    - Each goroutine writes to a distinct memory location.
    - No concurrent access to shared data structures.
 
-   Without confinement, if using a shared slice, a mutex would be required:
+   Without confinement, if using a shared slice, a mutex would be required.
 
-   Example: [Mutex Example](concurrencypatterns/mutex-example/)
-
-   Here, a mutex is needed to protect the shared `result` slice from concurrent access, making the code more complex and potentially less performant than the confined version.
-
-6. Mutex for shared state:
+7. Mutex for shared state:
    Uses mutual exclusion to protect shared data structures from concurrent access. It can be avoided by using confinement in above example.
    Examples: [Mutex Map](concurrencypatterns/mutex-map/), [Mutex Example](concurrencypatterns/mutex-example/)
 
-7. Or-Done pattern:
+8. Or-Done pattern:
    Allows for cancellation of multiple channels simultaneously. A separate re-usable function is created for this pattern. It is useful when you have multiple channels and want to cancel them all when one of them is done.
    Example: [Or Done](concurrencypatterns/or-done/)
 
-These patterns demonstrate various techniques for managing concurrency, from distributing work and combining results to protecting shared resources and handling cancellation.
+Channel Management Best Practices:
 
+1. When to close channels:
+   - Required: For range loops and signaling completion to multiple goroutines
+   - Not required: One-time communication, garbage-collected channels, synchronization-only channels
 
+2. Common mistakes to avoid:
+```go
+// Never write to a closed channel
+ch := make(chan int)
+close(ch)
+ch <- 1 // panic: send on closed channel
+
+// Never close a channel twice
+ch := make(chan int)
+close(ch)
+close(ch) // panic: close of closed channel
+```
+
+Examples:
 - [Context Example](concurrencypatterns/context-example/main.go)
 - [Generator](concurrencypatterns/generator/)
 - [Confinement](concurrencypatterns/confinement/)
@@ -1375,6 +1465,9 @@ These patterns demonstrate various techniques for managing concurrency, from dis
 - [Mutex Example](concurrencypatterns/mutex-example/)
 - [Prime Pipeline](concurrencypatterns/prime-pipeline/)
 - [Or Done](concurrencypatterns/or-done/)
+
+These patterns demonstrate various techniques for managing concurrency, from distributing work and combining results to protecting shared resources and handling cancellation.
+
 
 
 ## 9. Error Handling
