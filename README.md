@@ -993,8 +993,6 @@ fmt.Println(p) // Output: Alice (30 years old)
 
 By implementing the String() method, we provide a custom string representation for the Person struct. This is automatically used when the struct is printed or converted to a string.
 
-I'd be happy to modify the content to include information about `sort.Slice` and the differences between `sort.Sort` and `sort.Slice`. Here's an updated version:
-
 ### 7.3 Sorting in Go
 
 Go provides multiple ways to sort collections, including `sort.Sort`, `sort.Slice`, and `slices.Sort`. Each method has its own use cases and advantages.
