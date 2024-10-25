@@ -584,7 +584,7 @@ for i := range matrix {
 Maps are key-value data structures in Go that allow efficient lookup, insertion, and deletion operations. They are implemented as hash tables and provide an unordered collection of key-value pairs. Here's a brief overview of maps:
 
 1. Declaration: `map[KeyType]ValueType`
-2. Initialization: Can be done using make() or map literals
+2. Initialization: Can be done using `make()` or map literals
 3. Operations: Adding, updating, deleting, and retrieving values
 4. Concurrency: Not safe for concurrent use without additional synchronization
 5. Performance: Average time complexity of O(1) for basic operations
@@ -595,7 +595,41 @@ Key features:
 - Maps automatically grow as needed
 - The zero value of a map is nil
 
-Example usage:
+### Maps as Pointers
+
+In Go, maps are reference types, meaning that when you pass a map to a function, you are passing a reference to the original map, not a copy. This allows modifications made to the map within the function to affect the original map.
+
+Example of modifying a map in a function:
+
+```go
+func updateMap(m map[string]int) {
+    m["banana"] = 5 // Modifies the original map
+}
+
+func main() {
+    m := map[string]int{
+        "apple": 1,
+        "banana": 2,
+    }
+    updateMap(m)
+    fmt.Println(m["banana"]) // Output: 5
+}
+```
+
+### How Maps Grow
+
+Maps in Go automatically resize when the number of elements exceeds a certain threshold, which is determined by the load factor. When a map grows, Go allocates a new, larger underlying array and rehashes the existing key-value pairs into the new array. This process is handled automatically, and the programmer does not need to manage the resizing manually.
+
+Example of adding elements to a map:
+
+```go
+m := make(map[string]int)
+for i := 0; i < 100; i++ {
+    m[fmt.Sprintf("key%d", i)] = i // The map grows as needed
+}
+```
+
+### Example Usage
 
 ```go
 m := map[string]int{
@@ -611,7 +645,7 @@ delete(m, "banana")
 
 // Check existence
 if value, exists := m["apple"]; exists {
-    fmt.Println(value)
+    fmt.Println(value) // Output: 1
 }
 ```
 
