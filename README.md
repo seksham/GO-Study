@@ -2547,26 +2547,290 @@ In this setup, the request flows through `loggingMiddleware`, then `requestIDMid
 
 ## 13. Database Integration
 
-Using the `database/sql` package with PostgreSQL:
+### 13.1 MongoDB with Go
+
+MongoDB integration in Go is primarily done using the official MongoDB Go driver. Here's a comprehensive guide on working with MongoDB in Go applications:
+
+#### Installation
+
+First, install the MongoDB Go driver:
+```bash
+go get go.mongodb.org/mongo-driver/mongo
+```
+
+#### Basic Connection
 
 ```go
+package main
+
 import (
-    "database/sql"
-    _ "github.com/lib/pq"
+    "context"
+    "log"
+    "time"
+    "go.mongodb.org/mongo-driver/mongo"
+    "go.mongodb.org/mongo-driver/mongo/options"
 )
 
-db, err := sql.Open("postgres", "user=pqgotest dbname=pqgotest sslmode=verify-full")
-if err != nil {
-    log.Fatal(err)
+func connectDB() (*mongo.Client, error) {
+    ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+    defer cancel()
+    
+    // Connect to MongoDB
+    client, err := mongo.Connect(ctx, options.Client().ApplyURI("mongodb://localhost:27017"))
+    if err != nil {
+        return nil, err
+    }
+    
+    // Ping the database
+    err = client.Ping(ctx, nil)
+    if err != nil {
+        return nil, err
+    }
+    
+    return client, nil
 }
-defer db.Close()
-
-rows, err := db.Query("SELECT id, name FROM users WHERE id = $1", 1)
-if err != nil {
-    log.Fatal(err)
-}
-defer rows.Close()
 ```
+
+#### CRUD Operations
+
+##### Define Model
+```go
+type User struct {
+    ID        primitive.ObjectID `bson:"_id,omitempty"`
+    Name      string            `bson:"name"`
+    Email     string            `bson:"email"`
+    Age       int               `bson:"age"`
+    CreatedAt time.Time         `bson:"created_at"`
+}
+```
+
+##### Create (Insert)
+```go
+// Insert One Document
+func insertUser(client *mongo.Client, user User) (*mongo.InsertOneResult, error) {
+    collection := client.Database("testdb").Collection("users")
+    ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+    defer cancel()
+    
+    result, err := collection.InsertOne(ctx, user)
+    if err != nil {
+        return nil, err
+    }
+    return result, nil
+}
+
+// Insert Many Documents
+func insertManyUsers(client *mongo.Client, users []interface{}) (*mongo.InsertManyResult, error) {
+    collection := client.Database("testdb").Collection("users")
+    ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+    defer cancel()
+    
+    result, err := collection.InsertMany(ctx, users)
+    if err != nil {
+        return nil, err
+    }
+    return result, nil
+}
+```
+
+##### Read (Find)
+```go
+// Find One Document
+func findUser(client *mongo.Client, filter bson.M) (*User, error) {
+    collection := client.Database("testdb").Collection("users")
+    ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+    defer cancel()
+    
+    var user User
+    err := collection.FindOne(ctx, filter).Decode(&user)
+    if err != nil {
+        return nil, err
+    }
+    return &user, nil
+}
+
+// Find Many Documents
+func findUsers(client *mongo.Client, filter bson.M) ([]User, error) {
+    collection := client.Database("testdb").Collection("users")
+    ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+    defer cancel()
+    
+    cursor, err := collection.Find(ctx, filter)
+    if err != nil {
+        return nil, err
+    }
+    defer cursor.Close(ctx)
+    
+    var users []User
+    if err = cursor.All(ctx, &users); err != nil {
+        return nil, err
+    }
+    return users, nil
+}
+```
+
+##### Update
+```go
+// Update One Document
+func updateUser(client *mongo.Client, filter bson.M, update bson.M) (*mongo.UpdateResult, error) {
+    collection := client.Database("testdb").Collection("users")
+    ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+    defer cancel()
+    
+    result, err := collection.UpdateOne(ctx, filter, update)
+    if err != nil {
+        return nil, err
+    }
+    return result, nil
+}
+
+// Update Many Documents
+func updateManyUsers(client *mongo.Client, filter bson.M, update bson.M) (*mongo.UpdateResult, error) {
+    collection := client.Database("testdb").Collection("users")
+    ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+    defer cancel()
+    
+    result, err := collection.UpdateMany(ctx, filter, update)
+    if err != nil {
+        return nil, err
+    }
+    return result, nil
+}
+```
+
+##### Delete
+```go
+// Delete One Document
+func deleteUser(client *mongo.Client, filter bson.M) (*mongo.DeleteResult, error) {
+    collection := client.Database("testdb").Collection("users")
+    ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+    defer cancel()
+    
+    result, err := collection.DeleteOne(ctx, filter)
+    if err != nil {
+        return nil, err
+    }
+    return result, nil
+}
+
+// Delete Many Documents
+func deleteManyUsers(client *mongo.Client, filter bson.M) (*mongo.DeleteResult, error) {
+    collection := client.Database("testdb").Collection("users")
+    ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+    defer cancel()
+    
+    result, err := collection.DeleteMany(ctx, filter)
+    if err != nil {
+        return nil, err
+    }
+    return result, nil
+}
+```
+
+#### Advanced Operations
+
+##### Aggregation Pipeline
+```go
+func aggregateUsers(client *mongo.Client, pipeline mongo.Pipeline) ([]bson.M, error) {
+    collection := client.Database("testdb").Collection("users")
+    ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+    defer cancel()
+    
+    cursor, err := collection.Aggregate(ctx, pipeline)
+    if err != nil {
+        return nil, err
+    }
+    defer cursor.Close(ctx)
+    
+    var results []bson.M
+    if err = cursor.All(ctx, &results); err != nil {
+        return nil, err
+    }
+    return results, nil
+}
+```
+
+##### Indexing
+```go
+func createIndex(client *mongo.Client, field string, unique bool) error {
+    collection := client.Database("testdb").Collection("users")
+    ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+    defer cancel()
+    
+    model := mongo.IndexModel{
+        Keys:    bson.D{{field, 1}},
+        Options: options.Index().SetUnique(unique),
+    }
+    
+    _, err := collection.Indexes().CreateOne(ctx, model)
+    return err
+}
+```
+
+#### Usage Example
+```go
+func main() {
+    // Connect to MongoDB
+    client, err := connectDB()
+    if err != nil {
+        log.Fatal(err)
+    }
+    defer func() {
+        if err := client.Disconnect(context.Background()); err != nil {
+            log.Fatal(err)
+        }
+    }()
+    
+    // Create a new user
+    user := User{
+        Name:      "John Doe",
+        Email:     "john@example.com",
+        Age:       30,
+        CreatedAt: time.Now(),
+    }
+    
+    // Insert the user
+    result, err := insertUser(client, user)
+    if err != nil {
+        log.Fatal(err)
+    }
+    fmt.Printf("Inserted user ID: %v\n", result.InsertedID)
+    
+    // Find a user
+    filter := bson.M{"email": "john@example.com"}
+    foundUser, err := findUser(client, filter)
+    if err != nil {
+        log.Fatal(err)
+    }
+    fmt.Printf("Found user: %+v\n", foundUser)
+}
+```
+
+#### Best Practices
+
+1. Connection Management:
+   - Always use context for timeouts
+   - Properly close connections using defer
+   - Implement connection pooling for production environments
+
+2. Error Handling:
+   - Check for specific MongoDB errors using `mongo.IsDuplicateKeyError(err)`
+   - Implement proper retry mechanisms for transient failures
+   - Use meaningful error wrapping for better debugging
+
+3. Performance Optimization:
+   - Use appropriate indexes
+   - Implement pagination for large result sets
+   - Use projection to limit returned fields
+   - Consider using bulk operations for multiple documents
+
+4. Security:
+   - Use connection strings with authentication
+   - Implement proper access control
+   - Use TLS for production environments
+
+This MongoDB integration guide provides a solid foundation for working with MongoDB in Go applications, covering basic to advanced operations with proper error handling and best practices.
+
 
 ## 14. Testing
 
