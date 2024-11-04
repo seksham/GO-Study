@@ -652,8 +652,14 @@ for i := 0; i < 10; i++ {
 4. Slice Operations and Behavior:
 
 a) Slicing Operation [low:high:max]:
+
+low: starting index (inclusive)
+high: ending index (exclusive)
+max: maximum capacity index (exclusive)
+
 ```go
 arr := [6]int{1, 2, 3, 4, 5, 6}
+
 slice1 := arr[1:4]    // [2 3 4], len=3, cap=5
 slice2 := arr[1:4:4]  // [2 3 4], len=3, cap=3
 
