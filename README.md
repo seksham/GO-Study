@@ -2256,30 +2256,211 @@ func TestAdd(t *testing.T) {
         t.Errorf("Add(2, 3) = %d; want 5", result)
     }
 }
-
-// Run tests
-// go test
 ```
 
-### 14.2 Benchmarking
+Basic test commands:
+```bash
+# Run all tests in current package
+go test
 
-Writing and running benchmarks:
+# Run tests with verbose output
+go test -v
 
+# Run specific test
+go test -run TestAdd
+
+# Run tests matching a pattern
+go test -run "Test[A-Z].*"
+
+# Run tests in all subdirectories
+go test ./...
+```
+
+### 14.2 Benchmarking and Profiling
+
+#### 14.2.1 Basic Benchmarking
+
+Writing benchmarks:
 ```go
 func BenchmarkAdd(b *testing.B) {
     for i := 0; i < b.N; i++ {
         Add(2, 3)
     }
 }
+```
 
-// Run benchmarks
-// go test -bench=.
+Running benchmarks:
+```bash
+# Run all benchmarks
+go test -bench=.
+
+# Run specific benchmark
+go test -bench=BenchmarkAdd
+
+# Run benchmarks with custom iterations
+go test -bench=. -benchtime=5s
+
+# Show memory allocations
+go test -bench=. -benchmem
+```
+
+#### 14.2.2 Profiling
+
+1. CPU Profiling:
+```bash
+# Generate CPU profile
+go test -cpuprofile=cpu.prof -bench=.
+
+# Analyze with pprof
+go tool pprof cpu.prof
+
+# Generate web visualization (requires Graphviz)
+go tool pprof -web cpu.prof
+```
+
+2. Memory Profiling:
+```bash
+# Generate memory profile
+go test -memprofile=mem.prof -bench=.
+
+# Analyze with pprof
+go tool pprof mem.prof
+```
+
+3. Trace Profiling:
+```bash
+# Generate trace
+go test -trace=trace.out -bench=.
+
+# View trace
+go tool trace trace.out
+```
+
+Common pprof interactive commands:
+```bash
+top           # Show top consumers
+web           # Open graph visualization
+list <func>   # Show line-by-line breakdown
+peek          # Show parent-child relationships
+quit          # Exit pprof
+```
+
+### 14.3 Coverage Testing
+
+```bash
+# Run tests with coverage
+go test -cover
+
+# Generate coverage profile
+go test -coverprofile=coverage.out
+
+# View coverage in browser
+go tool cover -html=coverage.out
+
+# Generate coverage report
+go tool cover -func=coverage.out
+```
+
+### 14.4 Race Detection
+
+```bash
+# Run tests with race detector
+go test -race
+
+# Run specific test with race detector
+go test -race -run TestAdd
+```
+
+### 14.5 Testify Package
+
+The testify package provides enhanced testing capabilities with assertions, mocking, and suite support.
+
+Installation:
+```bash
+go get github.com/stretchr/testify
+```
+
+#### 14.5.1 Assertions
+```go
+import (
+    "testing"
+    "github.com/stretchr/testify/assert"
+)
+
+func TestExample(t *testing.T) {
+    // Simple assertions
+    assert.Equal(t, 123, Calculate())
+    assert.NotEqual(t, 456, Calculate())
+    assert.True(t, IsValid())
+    
+    // Collection assertions
+    assert.Contains(t, []string{"hello", "world"}, "hello")
+    assert.Len(t, []int{1,2,3}, 3)
+    
+    // Error assertions
+    err := SomeFunction()
+    assert.NoError(t, err)
+}
+```
+
+#### 14.5.2 Require Package
+```go
+import (
+    "github.com/stretchr/testify/require"
+)
+
+func TestWithRequire(t *testing.T) {
+    result := Setup()
+    require.NotNil(t, result)  // Test stops here if result is nil
+    require.Equal(t, expected, result.Value)
+}
+```
+
+#### 14.5.3 Mocking
+```go
+type MockDB struct {
+    mock.Mock
+}
+
+func (m *MockDB) Get(id string) (string, error) {
+    args := m.Called(id)
+    return args.String(0), args.Error(1)
+}
+
+func TestWithMock(t *testing.T) {
+    mockDB := new(MockDB)
+    mockDB.On("Get", "123").Return("data", nil)
+    
+    result, err := mockDB.Get("123")
+    mockDB.AssertExpectations(t)
+}
+```
+
+#### 14.5.4 Test Suites
+```go
+type ExampleTestSuite struct {
+    suite.Suite
+    db *Database
+}
+
+func (suite *ExampleTestSuite) SetupTest() {
+    suite.db = NewDatabase()
+}
+
+func (suite *ExampleTestSuite) TestExample() {
+    result := suite.db.Query()
+    suite.Equal(expected, result)
+}
+
+func TestExampleTestSuite(t *testing.T) {
+    suite.Run(t, new(ExampleTestSuite))
+}
 ```
 
 Additional examples:
 - [Test Examples](test/main.go)
 
-This file contains various examples of Go language features, including switch statements, type assertions, and generics. While not strictly a test file, it demonstrates how different language constructs can be used and tested.
+
 
 ## 15. Tools and Commands
 
