@@ -2163,6 +2163,7 @@ Additional examples:
 Go 1.18+ supports generics:
 
 ```go
+// Basic generic function
 func PrintSlice[T any](s []T) {
     for _, v := range s {
         fmt.Println(v)
@@ -2172,7 +2173,107 @@ func PrintSlice[T any](s []T) {
 // Usage
 PrintSlice([]int{1, 2, 3})
 PrintSlice([]string{"a", "b", "c"})
+
+// Generic function with multiple type parameters
+func Map[T, U any](s []T, f func(T) U) []U {
+    result := make([]U, len(s))
+    for i, v := range s {
+        result[i] = f(v)
+    }
+    return result
+}
+
+// Generic struct
+type Stack[T any] struct {
+    items []T
+}
+
+func (s *Stack[T]) Push(item T) {
+    s.items = append(s.items, item)
+}
+
+func (s *Stack[T]) Pop() (T, bool) {
+    var zero T
+    if len(s.items) == 0 {
+        return zero, false
+    }
+    item := s.items[len(s.items)-1]
+    s.items = s.items[:len(s.items)-1]
+    return item, true
+}
+
+// Using comparable constraint
+func Contains[T comparable](slice []T, item T) bool {
+    for _, v := range slice {
+        if v == item {
+            return true
+        }
+    }
+    return false
+}
+
+// Custom type constraint with ~
+type Integer interface {
+    ~int | ~int32 | ~int64
+}
+
+type Float interface {
+    ~float32 | ~float64
+}
+
+// Combined numeric constraint
+type Number interface {
+    Integer | Float
+}
+
+// Works with custom integer types
+type MyInt int
+type MyFloat64 float64
+
+func Sum[T Number](numbers []T) T {
+    var sum T
+    for _, n := range numbers {
+        sum += n
+    }
+    return sum
+}
+
+// Example usage with custom types
+func Example() {
+    // Works with built-in types
+    ints := []int{1, 2, 3}
+    fmt.Println(Sum(ints)) // 6
+
+    // Works with custom types too
+    myInts := []MyInt{MyInt(1), MyInt(2), MyInt(3)}
+    fmt.Println(Sum(myInts)) // 6
+
+    myFloats := []MyFloat64{MyFloat64(1.1), MyFloat64(2.2)}
+    fmt.Println(Sum(myFloats)) // 3.3
+}
+
+// Generic map type
+type Cache[K comparable, V any] struct {
+    data map[K]V
+}
+
+func NewCache[K comparable, V any]() *Cache[K, V] {
+    return &Cache[K, V]{
+        data: make(map[K]V),
+    }
+}
 ```
+
+Key points about generics in Go:
+- Use square brackets `[T any]` for type parameters
+- `any` is an alias for `interface{}`
+- `comparable` is a built-in constraint that allows `==` and `!=` operations
+- Custom type constraints can be defined using interface types
+- Multiple type parameters are supported `[K, V any]`
+- Generic types can be used in structs, interfaces, and methods
+- The `~` operator in constraints means "any type with underlying type". For example:
+  - `~int` matches both `int` and any type defined as `type MyInt int`
+  - Without `~`, the constraint would only match the exact type
 
 Additional examples:
 - [Generics](Generics/main.go)

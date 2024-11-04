@@ -68,9 +68,10 @@ func main() {
 	close(jobs)
 
 	// Start workers and collect their result channels
-	var resultChannels []<-chan Result
+	// var resultChannels []<-chan Result
+	resultChannels := make([]<-chan Result, numWorkers)
 	for i := 0; i < numWorkers; i++ {
-		resultChannels = append(resultChannels, worker(i, jobs))
+		resultChannels[i] = worker(i, jobs)
 	}
 
 	// Fan-in the result channels

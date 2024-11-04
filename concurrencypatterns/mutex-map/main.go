@@ -42,16 +42,16 @@ func main() {
 	fmt.Println(data)
 	for i := 0; i < 100; i++ {
 		wg.Add(1)
-		go func(index int) {
+		go func() {
 			defer wg.Done()
-			key := fmt.Sprintf("key%d", index)
+			key := fmt.Sprintf("key%d", i)
 			value, ok := safeMap.Get(key)
 			if !ok {
 				fmt.Println("key not found:", key)
 			} else {
 				fmt.Printf("%s = %s\n", key, value)
 			}
-		}(i)
+		}()
 	}
 	// wg.Wait()
 	// wg.Wait()
