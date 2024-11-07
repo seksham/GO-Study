@@ -44,13 +44,15 @@ func (c *LRUCache[K, V]) Put(key K, val V) {
 		c.list.MoveToFront(elem)
 		elem.Value = Pair[K, V]{key, val}
 	} else {
-		if c.capacity <= c.list.Len() {
+		if c.list.Len() >= c.capacity {
 			oldest := c.list.Back()
 			if oldest != nil {
 				c.list.Remove(oldest)
 				delete(c.cache, oldest.Value.(Pair[K, V]).key)
 			}
 		}
+		elem := c.list.PushFront(Pair[K, V]{key, val})
+		c.cache[key] = elem
 	}
 }
 
