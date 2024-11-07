@@ -105,7 +105,7 @@ func findLongestPalindromeManacher(s string) string {
 			center = i / 2 // convert to index in original string
 		}
 
-		// Step 6: Update boundaries if palindrome at i expands past rightBoundary
+		// Step 6: Update boundaries of right most palindrome if palindrome at i expands past rightBoundary.
 		if i+k > rightBoundary {
 			leftBoundary = i - k
 			rightBoundary = i + k
