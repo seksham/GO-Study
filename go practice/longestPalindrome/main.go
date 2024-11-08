@@ -60,7 +60,7 @@ func transformForManacher(s string) string {
 func findLongestPalindromeManacher(s string) string {
 	// Step 1: Transform the input string
 	t := transformForManacher(s)
-	fmt.Println("Transformed string:", t)
+	// fmt.Println("Transformed string:", t)
 
 	// Initialize variables
 	leftBoundary := 0   // L: left boundary of rightmost palindrome
@@ -134,6 +134,9 @@ func findLongestPalindromeManacher(s string) string {
 // Space complexity: O(1)
 func findLongestPalindromeExpand(s string) string {
 	n := len(s)
+	if n <= 1 {
+		return s
+	}
 
 	expandAroundCenter := func(left, right int) int {
 		for left >= 0 && right < n && s[left] == s[right] {
@@ -143,8 +146,10 @@ func findLongestPalindromeExpand(s string) string {
 		return right - left - 1 // Length of palindrome: (right-1) - (left+1) + 1
 	}
 
-	start, maxLen := 0, 0
-	for i := 0; i < n; i++ {
+	// Changed initial maxLen to 1 since any single character is a palindrome
+	start, maxLen := 0, 1
+	// Changed loop condition to optimize by skipping positions that can't yield longer palindromes
+	for i := 0; i < n-maxLen/2; i++ {
 		// Check for odd-length palindromes
 		len1 := expandAroundCenter(i, i)
 		// Check for even-length palindromes
@@ -153,10 +158,10 @@ func findLongestPalindromeExpand(s string) string {
 		if lenMax > maxLen {
 			start = i - (lenMax-1)/2
 			maxLen = lenMax
-			fmt.Printf("Palindrome found at index %d, length %d\n", i, lenMax)
+			// fmt.Printf("Palindrome found at index %d, length %d\n", i, lenMax)
 		}
 	}
-	fmt.Printf("Longest palindrome length: %d\n", maxLen)
+	// fmt.Printf("Longest palindrome length: %d\n", maxLen)
 	return s[start : start+maxLen]
 }
 
@@ -210,7 +215,7 @@ func findLongestPalindromeDP(s string) string {
 			}
 		}
 	}
-	printMatrix(dp)
+	// printMatrix(dp)
 
 	return s[start : start+maxLength]
 }
@@ -240,9 +245,9 @@ func main() {
 	sub = findLongestPalindromeBruteForce("abccadddcdddacqlde")
 	fmt.Println(sub)
 	fmt.Println(isPalindrome("abccadddcdddacqlde"))
-	fmt.Println(findLongestPalindromeDP("abccadddcdddacqlde"))
-	fmt.Println(findLongestPalindromeExpand("abccadddcdddacqlde"))
-	fmt.Println(findLongestPalindromeExpand("abccadddccdddacqlde"))
-	fmt.Println(findLongestPalindromeManacher("abccadddcdddacqlde"))
-	fmt.Println(findLongestPalindromeManacher("abccadddccdddacqlde"))
+	fmt.Println("DP:", findLongestPalindromeDP("abccadddcdddacqlde"))
+	fmt.Println("Expand:", findLongestPalindromeExpand("abccadddcdddacqlde"))
+	fmt.Println("Expand:", findLongestPalindromeExpand("abccadddccdddacqlde"))
+	fmt.Println("Manacher:", findLongestPalindromeManacher("abccadddcdddacqlde"))
+	fmt.Println("Manacher:", findLongestPalindromeManacher("abccadddccdddacqlde"))
 }
