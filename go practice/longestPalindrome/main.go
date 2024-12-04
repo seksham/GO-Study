@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"strings"
 )
 
 // isPalindrome checks if a given string is a palindrome
@@ -116,6 +117,75 @@ func findLongestPalindromeManacher(s string) string {
 	start := center - maxLen/2
 	end := start + maxLen
 	return s[start:end]
+}
+
+
+
+func findLongestPalindromeOptimisedManacher(s string) string {
+	// Transform string by adding boundaries and separators
+	// Example: "abc" -> "^#a#b#c#$"
+	// ^ and $ serve as sentinels, eliminating bound checking
+	// equivalent to transformForManacher() but with boundaries
+	T := "^#" + strings.Join(strings.Split(s, ""), "#") + "#$"
+	n := len(T)
+
+	// P[i] stores the radius of palindrome centered at i
+	// equivalent to p[] array in original version
+	P := make([]int, n)
+
+	// C: Center of the current palindrome being processed
+	// R: Right boundary of the current palindrome
+	// These replace leftBoundary and rightBoundary from original
+	// Note: leftBoundary can be calculated as 2*C-R if needed
+	C, R := 0, 0
+
+	// Main loop: process each character except boundaries
+	// n-1 because we don't need to process the $ boundary
+	for i := 1; i < n-1; i++ {
+		// If current position is within a known palindrome
+		// equivalent to the else block in original version
+		if R > i {
+			// Mirror position is 2*C-i (equivalent to j in original)
+			// min(R-i, P[2*C-i]) handles two cases from original:
+			// 1. If mirror palindrome fits within boundary: use P[2*C-i]
+			// 2. If it extends beyond boundary: use R-i
+			P[i] = min(R-i, P[2*C-i])
+		}
+		// else implicitly P[i] = 0 (equivalent to k = 0 in original)
+
+		// Attempt to expand palindrome centered at i
+		// T[i+1+P[i]] is the next character to right of known palindrome
+		// T[i-1-P[i]] is the next character to left of known palindrome
+		// Equivalent to the expansion loop in original but without bound checking
+		// because ^ and $ boundaries will never match
+		for T[i+1+P[i]] == T[i-1-P[i]] {
+			P[i]++
+		}
+
+		// If palindrome centered at i expands past R,
+		// update C and R to this new, larger palindrome
+		// equivalent to boundary update in original
+		if i+P[i] > R {
+			C = i
+			R = i + P[i]
+		}
+	}
+
+	// Find the longest palindrome
+	// equivalent to tracking maxLen and center in original
+	maxLen := 0
+	centerIndex := 0
+	for i, v := range P {
+		if v > maxLen {
+			maxLen = v
+			centerIndex = i
+		}
+	}
+
+	// Convert center and length from transformed string to original string
+	// (centerIndex-maxLen)/2 gives start position in original string
+	// The division by 2 is needed because we added extra characters
+	return s[(centerIndex-maxLen)/2 : (centerIndex+maxLen)/2]
 }
 
 // findLongestPalindromeExpand uses center expansion technique
