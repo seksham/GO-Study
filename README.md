@@ -3109,61 +3109,97 @@ This comprehensive guide covers all major aspects of Go programming, from basic 
 
 ## 17. File Operations
 
-Go provides robust support for file operations through the `os` and `io/ioutil` packages. Here are some common file operations:
+Go provides robust support for file operations through various packages like `os`, `io`, `io/ioutil`, and `bufio`. Here's a comprehensive guide to file operations:
 
-### 17.1 Creating a File
+### 17.1 Reading Files
 
-To create a new file:
-
+#### Small Files (< 1MB)
 ```go
-file, err := os.Create("example.txt")
+// Method 1: os.ReadFile (Simplest)
+content, err := os.ReadFile("small.txt")  // Returns []byte
+if err != nil {
+    log.Fatal(err)
+}
+
+// Method 2: io.ReadAll
+file, err := os.Open("small.txt")         // Returns *os.File
 if err != nil {
     log.Fatal(err)
 }
 defer file.Close()
+content, err := io.ReadAll(file)          // Returns []byte
 
-_, err = file.WriteString("Hello, World!")
-if err != nil {
-    log.Fatal(err)
-}
-```
-
-### 17.2 Reading a File
-
-To read the entire contents of a file:
-
-```go
-content, err := os.ReadFile("example.txt")
-if err != nil {
-    log.Fatal(err)
-}
-fmt.Println(string(content))
-```
-
-For reading large files, you might want to use a buffered reader:
-
-```go
-file, err := os.Open("largefile.txt")
-if err != nil {
-    log.Fatal(err)
-}
+// Method 3: bufio.Scanner (line by line)
+file, _ := os.Open("small.txt")           // Returns *os.File
 defer file.Close()
-
-scanner := bufio.NewScanner(file)
+scanner := bufio.NewScanner(file)         // Returns *bufio.Scanner
 for scanner.Scan() {
-    fmt.Println(scanner.Text())
+    line := scanner.Text()                // Returns string
+    // Process line
+}
+```
+
+#### Large Files (> 1MB)
+```go
+// Method 1: bufio.Scanner (Memory efficient)
+file, _ := os.Open("large.txt")           // Returns *os.File
+defer file.Close()
+scanner := bufio.NewScanner(file)         // Returns *bufio.Scanner
+for scanner.Scan() {
+    line := scanner.Text()                // Returns string
+    // Process line
 }
 
-if err := scanner.Err(); err != nil {
+// Method 2: Buffered reading
+file, _ := os.Open("large.txt")           // Returns *os.File
+defer file.Close()
+buffer := make([]byte, 1024)              // Returns []byte
+for {
+    n, err := file.Read(buffer)           // Returns (int, error)
+    if err == io.EOF {
+        break
+    }
+    // Process buffer[:n]
+}
+```
+
+### 17.2 Writing Files
+
+#### Simple Writing
+```go
+// Method 1: Write entire file
+data := []byte("Hello, World!")
+err := os.WriteFile("file.txt", data, 0644)
+
+// Method 2: Create and write
+file, err := os.Create("file.txt")
+if err != nil {
     log.Fatal(err)
 }
+defer file.Close()
+file.Write([]byte("Hello"))
+```
+
+#### Buffered Writing
+```go
+file, err := os.Create("large.txt")
+if err != nil {
+    log.Fatal(err)
+}
+defer file.Close()
+
+writer := bufio.NewWriter(file)
+for i := 0; i < 1000; i++ {
+    writer.WriteString("Line of text\n")
+}
+writer.Flush()
 ```
 
 ### 17.3 Updating a File
 
-To append to an existing file:
-
+#### Append to an Existing File
 ```go
+// Adds text to the end of the file
 file, err := os.OpenFile("example.txt", os.O_APPEND|os.O_WRONLY, 0644)
 if err != nil {
     log.Fatal(err)
@@ -3176,43 +3212,127 @@ if err != nil {
 }
 ```
 
-To overwrite a file:
-
+#### Overwrite Entire File
 ```go
+// Replaces all content with new content
 err := os.WriteFile("example.txt", []byte("New content"), 0644)
 if err != nil {
     log.Fatal(err)
 }
 ```
 
-### 17.4 Additional File Operations
-
-- Checking if a file exists:
-
+#### Replace Specific Text (Small Files)
 ```go
-_, err := os.Stat("example.txt")
-if os.IsNotExist(err) {
-    fmt.Println("File does not exist")
+// Read the file
+content, err := os.ReadFile("example.txt")   // Returns []byte
+if err != nil {
+    log.Fatal(err)
+}
+
+// Replace text and write back
+newContent := strings.Replace(string(content), "old text", "new text", -1)
+err = os.WriteFile("example.txt", []byte(newContent), 0644)
+if err != nil {
+    log.Fatal(err)
 }
 ```
 
-- Renaming a file:
+#### Process Line by Line (Large Files)
+```go
+// Create a temporary file
+tempFile, err := os.CreateTemp("", "temp-*.txt")
+if err != nil {
+    log.Fatal(err)
+}
+defer os.Remove(tempFile.Name())
+
+// Open original file
+original, err := os.Open("example.txt")
+if err != nil {
+    log.Fatal(err)
+}
+defer original.Close()
+
+// Process line by line
+scanner := bufio.NewScanner(original)
+writer := bufio.NewWriter(tempFile)
+for scanner.Scan() {
+    line := scanner.Text()
+    // Example: Replace "old" with "new" in each line
+    updatedLine := strings.Replace(line, "old", "new", -1)
+    writer.WriteString(updatedLine + "\n")
+}
+writer.Flush()
+
+// Replace original with updated file
+os.Rename(tempFile.Name(), "example.txt")
+```
+
+### 17.4 JSON Operations
+
+#### Small JSON Files
+```go
+// Reading: Direct Unmarshal
+content, _ := os.ReadFile("small.json")
+var data interface{}
+json.Unmarshal(content, &data)
+
+// Writing: Marshal and Write
+data := map[string]string{"name": "John"}
+jsonData, _ := json.Marshal(data)
+os.WriteFile("output.json", jsonData, 0644)
+```
+
+#### Large JSON Files
+```go
+// Reading: Streaming Decoder
+file, _ := os.Open("large.json")
+defer file.Close()
+decoder := json.NewDecoder(file)
+for decoder.More() {
+    var item interface{}
+    err := decoder.Decode(&item)
+    // Process item
+}
+
+// Writing: Streaming Encoder
+file, _ := os.Create("large.json")
+defer file.Close()
+encoder := json.NewEncoder(file)
+for item := range items {
+    encoder.Encode(item)
+}
+```
+
+### 17.5 Additional File Operations
 
 ```go
+// Check if file exists
+_, err := os.Stat("file.txt")
+if os.IsNotExist(err) {
+    fmt.Println("File does not exist")
+}
+
+// Rename file
 err := os.Rename("old.txt", "new.txt")
 if err != nil {
     log.Fatal(err)
 }
-```
 
-- Deleting a file:
-
-```go
-err := os.Remove("example.txt")
+// Delete file
+err := os.Remove("file.txt")
 if err != nil {
     log.Fatal(err)
 }
 ```
+
+### Best Practices
+1. Always close files using `defer file.Close()`
+2. Check for errors after each operation
+3. Consider memory constraints when choosing a method
+4. Use buffered operations for large files
+5. Use appropriate buffer sizes for your use case
+6. Handle errors appropriately
 
 Reference: [File Operations](fileOperations/main.go)
 These examples cover the basic file operations in Go. Remember to handle errors appropriately and close files when you're done with them. The `defer` keyword is particularly useful for ensuring files are closed properly.
