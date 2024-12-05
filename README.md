@@ -2346,16 +2346,200 @@ ch := make(chan int, 5)  // buffered channel with capacity 5
 
 Understanding the difference between `new` and `make` is crucial for proper memory allocation and initialization in Go programs.
 
-### 11.2 Garbage Collection
+### 11.2 Memory Management and Garbage Collection
 
-Go uses a concurrent mark-and-sweep garbage collector. While it's mostly automatic, you can influence it:
+Go uses a sophisticated memory management system with automatic garbage collection. Understanding how memory is managed and collected is crucial for writing efficient Go programs.
+
+#### 11.2.1 Stack vs Heap Allocation
+
+##### Stack Memory
+- Fast allocation and deallocation
+- Memory is automatically freed when function returns
+- Size must be known at compile time
+- Limited in size (typically a few MB)
+- Thread-local (each goroutine has its own stack)
+
+Examples of stack allocation:
+```go
+func stackExample() {
+    // These will typically be allocated on the stack
+    x := 42                    // Basic types
+    y := [3]int{1, 2, 3}      // Small arrays
+    z := struct{ name string }{"John"} // Small structs
+}
+```
+
+##### Heap Memory
+- Managed by garbage collector
+- Flexible size
+- Slower than stack allocation
+- Shared across goroutines
+- Used for values that outlive the function that creates them
+
+Examples of heap allocation:
+```go
+func heapExample() *int {
+    // These will typically be allocated on the heap
+    x := new(int)       // Pointer types
+    y := make([]int, 3) // Slices
+    z := make(map[string]int) // Maps
+    return x            // Returning address forces heap allocation
+}
+```
+
+#### 11.2.2 Escape Analysis
+
+Go's compiler performs escape analysis to determine whether a value can be allocated on the stack or must be allocated on the heap.
+
+Common scenarios that cause heap allocation:
+```go
+// 1. Returning addresses of local variables
+func createPointer() *int {
+    x := 42
+    return &x  // x escapes to heap
+}
+
+// 2. Storing references in interfaces
+func createInterface() interface{} {
+    x := 42
+    return x  // x escapes to heap due to interface conversion
+}
+
+// 3. Slices or maps that might grow
+func createSlice() []int {
+    return make([]int, 0, 10)  // Usually heap allocated
+}
+
+// 4. Goroutine-accessed variables
+func accessFromGoroutine() {
+    x := 42
+    go func() {
+        fmt.Println(x)  // x escapes to heap
+    }()
+}
+```
+
+You can see escape analysis details using:
+```bash
+go build -gcflags="-m"
+```
+
+#### 11.2.3 Garbage Collection Process
+
+Go uses a concurrent, tri-color mark-and-sweep collector:
+
+1. **Mark Phase**
+   - White: Unvisited objects
+   - Grey: Visited but not scanned
+   - Black: Visited and scanned
+   ```go
+   // Objects are initially white
+   root := &Object{}      // Grey (visited)
+   root.Next = &Object{}  // White (unvisited)
+   // After scanning root, it becomes black
+   // After scanning root.Next, both are black
+   ```
+
+2. **Write Barrier**
+   - Ensures consistency during concurrent marking
+   - Activated during garbage collection
+   ```go
+   // Write barrier example (conceptual)
+   if writeBarrier.enabled {
+       writeBarrier(ptr, val)
+   } else {
+       *ptr = val
+   }
+   ```
+
+3. **Sweep Phase**
+   - Reclaims memory from white objects
+   - Runs concurrently with application
+
+#### 11.2.4 GC Tuning
+
+Control garbage collection behavior:
 
 ```go
-runtime.GC() // Force a garbage collection
+// Force immediate garbage collection
+runtime.GC()
 
-// Set GOGC environment variable to control GC frequency
-// GOGC=50 means GC will run when heap size is 50% larger than after the previous GC
+// Set GOGC environment variable
+// GOGC=50 means GC triggers when heap grows by 50%
+os.Setenv("GOGC", "50")
+
+// Get current memory statistics
+var stats runtime.MemStats
+runtime.ReadMemStats(&stats)
+fmt.Printf("Heap size: %d\n", stats.HeapAlloc)
 ```
+
+#### 11.2.5 Memory Optimization Techniques
+
+1. **Object Pooling**
+```go
+var pool = sync.Pool{
+    New: func() interface{} {
+        return make([]byte, 1024)
+    },
+}
+
+func processData() {
+    buf := pool.Get().([]byte)
+    defer pool.Put(buf)
+    // Use buf...
+}
+```
+
+2. **Preallocate Slices**
+```go
+// Better
+s := make([]int, 0, 1000)
+for i := 0; i < 1000; i++ {
+    s = append(s, i)
+}
+
+// Worse (causes multiple reallocations)
+var s []int
+for i := 0; i < 1000; i++ {
+    s = append(s, i)
+}
+```
+
+3. **Avoid Memory Leaks**
+```go
+// Potential memory leak
+type Cache struct {
+    data map[string]*hugeStruct
+}
+
+// Better: Add cleanup method
+func (c *Cache) Cleanup(maxAge time.Duration) {
+    for k, v := range c.data {
+        if time.Since(v.lastAccess) > maxAge {
+            delete(c.data, k)
+        }
+    }
+}
+```
+
+#### 11.2.6 GC Impact on Performance
+
+Monitor GC performance:
+```go
+// Enable GC logging
+debug.SetGCPercent(100)  // Default is 100
+debug.SetMemoryLimit(1e9) // Set memory limit (Go 1.19+)
+
+// Get GC statistics
+var stats debug.GCStats
+debug.ReadGCStats(&stats)
+fmt.Printf("Last GC: %v\n", stats.LastGC)
+fmt.Printf("Num GC: %d\n", stats.NumGC)
+fmt.Printf("Pause Total: %v\n", stats.PauseTotal)
+```
+
+These concepts and examples provide a deeper understanding of Go's memory management and garbage collection system. Understanding these aspects helps in writing more efficient Go programs and troubleshooting memory-related issues.
 
 ## 12. Web Development
 
