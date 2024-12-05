@@ -1588,23 +1588,28 @@ func fanOut(input <-chan int, numWorkers int) []<-chan int {
     return outputs
 }
 
-func fanIn(inputs ...<-chan int) <-chan int {
-    out := make(chan int)
-    var wg sync.WaitGroup
-    for _, ch := range inputs {
-        wg.Add(1)
-        go func(c <-chan int) {
-            defer wg.Done()
-            for n := range c {
-                out <- n
-            }
-        }(ch)
-    }
-    go func() {
-        wg.Wait()
-        close(out)
-    }()
-    return out
+func fanIn(channels ...<-chan Result) <-chan Result {
+	var wg sync.WaitGroup
+	multiplexed := make(chan Result)
+
+	multiplex := func(c <-chan Result) {
+		defer wg.Done()
+		for result := range c {
+			multiplexed <- result
+		}
+	}
+
+	wg.Add(len(channels))
+	for _, c := range channels {
+		go multiplex(c)
+	}
+
+	go func() {
+		wg.Wait()
+		close(multiplexed)
+	}()
+
+	return multiplexed
 }
 ```
 
