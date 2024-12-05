@@ -2657,7 +2657,164 @@ Reference: [Gorilla Mux Variables Example](webserver/gorillamux/main.go)
 
 These examples cover various aspects of web development in Go, including basic and advanced HTTP servers, HTTP clients, custom writers, JSON handling, URL routing, and using third-party routers like Gorilla Mux. Each topic includes a reference to the relevant Go file for more detailed implementation.
 
-### 12.9 Middleware
+### 12.9 Gin Framework
+
+Gin is a high-performance HTTP web framework written in Go. It provides a martini-like API with much better performance and features.
+
+#### Installation
+```bash
+go get -u github.com/gin-gonic/gin
+```
+
+#### Basic Usage
+```go
+import "github.com/gin-gonic/gin"
+
+func main() {
+    // Create default gin router
+    r := gin.Default()
+
+    // Basic route
+    r.GET("/", func(c *gin.Context) {
+        c.JSON(200, gin.H{
+            "message": "Hello World",
+        })
+    })
+
+    // Run on port 8080
+    r.Run(":8080")
+}
+```
+
+#### Route Parameters
+```go
+// URL Parameters
+r.GET("/user/:name", func(c *gin.Context) {
+    name := c.Param("name")
+    c.String(200, "Hello %s", name)
+})
+
+// Query Parameters
+r.GET("/search", func(c *gin.Context) {
+    query := c.DefaultQuery("q", "default search")
+    c.String(200, "Search query: %s", query)
+})
+```
+
+#### Request Body Binding
+```go
+type User struct {
+    Name     string `json:"name" binding:"required"`
+    Email    string `json:"email" binding:"required,email"`
+    Password string `json:"password" binding:"required,min=6"`
+}
+
+r.POST("/user", func(c *gin.Context) {
+    var user User
+    if err := c.ShouldBindJSON(&user); err != nil {
+        c.JSON(400, gin.H{"error": err.Error()})
+        return
+    }
+    c.JSON(200, gin.H{"message": "User created"})
+})
+```
+
+#### Middleware
+```go
+// Custom middleware
+func Logger() gin.HandlerFunc {
+    return func(c *gin.Context) {
+        t := time.Now()
+        
+        // Set example variable
+        c.Set("example", "12345")
+
+        // before request
+        c.Next()
+        // after request
+
+        latency := time.Since(t)
+        log.Printf("Latency: %v", latency)
+    }
+}
+
+// Using middleware
+r.Use(Logger())
+```
+
+#### Groups and Versioning
+```go
+// API versioning
+v1 := r.Group("/v1")
+{
+    v1.POST("/login", loginEndpoint)
+    v1.POST("/submit", submitEndpoint)
+    v1.POST("/read", readEndpoint)
+}
+
+v2 := r.Group("/v2")
+{
+    v2.POST("/login", loginEndpointV2)
+    v2.POST("/submit", submitEndpointV2)
+    v2.POST("/read", readEndpointV2)
+}
+```
+
+#### File Upload
+```go
+r.POST("/upload", func(c *gin.Context) {
+    file, _ := c.FormFile("file")
+    
+    // Save file
+    c.SaveUploadedFile(file, "uploaded/"+file.Filename)
+    
+    c.String(200, "File %s uploaded!", file.Filename)
+})
+```
+
+#### Serving Static Files
+```go
+// Serve single file
+r.StaticFile("/favicon.ico", "./resources/favicon.ico")
+
+// Serve directory
+r.Static("/assets", "./assets")
+```
+
+#### Custom Validators
+```go
+type Booking struct {
+    CheckIn  time.Time `form:"check_in" binding:"required,bookabledate"`
+    CheckOut time.Time `form:"check_out" binding:"required,gtfield=CheckIn"`
+}
+
+func bookableDate(fl validator.FieldLevel) bool {
+    date, ok := fl.Field().Interface().(time.Time)
+    if ok {
+        today := time.Now()
+        if date.Unix() > today.Unix() {
+            return true
+        }
+    }
+    return false
+}
+
+func main() {
+    r := gin.Default()
+    if v, ok := binding.Validator.Engine().(*validator.Validate); ok {
+        v.RegisterValidation("bookabledate", bookableDate)
+    }
+    // ... router setup
+}
+```
+
+Additional examples:
+- [Gin Basic Server](webserver/gin/basic/main.go)
+- [Gin Advanced Features](webserver/gin/advanced/main.go)
+
+The Gin framework provides a robust set of features for building web applications in Go, with excellent performance and a simple, expressive API. These examples cover the most common use cases, but Gin offers many more features for building complex web applications.
+
+### 12.10 Middleware
 
 Middleware in Go is a powerful concept, especially in the context of HTTP servers. It allows you to process requests and responses before they reach your main handler or after they've been processed by your handler.
 
