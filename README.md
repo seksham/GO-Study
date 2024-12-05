@@ -975,12 +975,32 @@ type Person struct {
 }
 
 // Creating and initializing a struct
-p1 := Person{"Alice", 30}
-p2 := Person{Name: "Bob", Age: 25}
-p3 := Person{Name: "Charlie"} // Age will be set to zero value (0)
+// Note: Each line in struct initialization must end with a comma, 
+// including the last line. This makes version control diffs cleaner 
+// and makes it easier to add/remove fields.
+p1 := Person{
+    Name: "Alice",  // comma required
+    Age: 30,        // comma required even on last line
+}
 
-// Accessing struct fields
-fmt.Println(p1.Name, p1.Age)
+// This is harder to maintain:
+p2 := Person{
+    Name: "Bob",    // comma required
+    Age: 25  // no comma makes it harder to add new fields
+}
+
+// Multi-field struct with proper formatting:
+type Employee struct {
+    Person: Person{
+        Name: "John",     // comma required
+        Age: 30,         // comma required
+    },                   // comma required
+    Address: Address{
+        Street: "123 Main St",  // comma required
+        City: "Anytown",        // comma required
+    },                         // comma required
+    Salary: 50000,            // comma required
+}                            // no comma needed for closing brace
 ```
 
 ### 6.2 Struct Methods
