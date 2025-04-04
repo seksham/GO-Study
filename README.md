@@ -1368,6 +1368,14 @@ Goroutines are lightweight because:
    - Goroutine state is smaller and simpler than full thread state, so it's quicker to save and restore.
    - The Go scheduler doesn't need to switch to kernel mode to perform a context switch, which is a time-consuming operation for OS threads.
    - The Go scheduler can make more intelligent decisions about when to switch contexts, as it has more information about the goroutines it's managing than the OS has about threads.
+4. Preemptive scheduling:
+   The Go scheduler implements preemptive scheduling for goroutines, which enables:
+   - Interruption of running goroutines at specific points to allow other goroutines to run
+   - Since Go 1.14, asynchronous preemption that can interrupt even CPU-intensive tasks
+   - Preemption at function calls and backward branches in loops to prevent CPU monopolization
+   - Runtime checks that determine if a goroutine has been running too long and should yield
+   - Improved application responsiveness and fair resource allocation among goroutines
+   - Better system utilization compared to the pre-1.14 cooperative scheduling model
 
 These factors contribute to making goroutines much more lightweight and efficient than OS threads, allowing Go programs to handle high levels of concurrency with relatively low overhead.
 
